@@ -1,7 +1,7 @@
 package com.example.dI
 
 
-import Security.PasswordHasher
+import security.PasswordHasher
 import com.example.controller.AuthController
 import data.repository.UserRepositoryImpl
 import domain.repository.UserRepository

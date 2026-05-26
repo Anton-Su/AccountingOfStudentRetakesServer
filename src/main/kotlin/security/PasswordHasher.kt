@@ -1,4 +1,4 @@
-package Security
+package security
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 

@@ -1,7 +1,7 @@
 package domain.usecases
 
-import Security.JwtConfig
-import Security.PasswordHasher
+import security.JwtConfig
+import security.PasswordHasher
 import domain.repository.UserRepository
 
 class LoginUseCase(

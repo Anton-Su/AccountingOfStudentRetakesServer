@@ -1,12 +1,12 @@
 package data.repository
 
-import Security.PasswordHasher
+import security.PasswordHasher
 import domain.model.User
 import domain.model.UserRole
 import domain.repository.UserRepository
 
 class UserRepositoryImpl : UserRepository {
-    private val usersByEmail = mutableMapOf<String, User>(
+    private val usersByEmail = mutableMapOf(
         "admin@example.com" to User(
             id = 1,
             role = UserRole.ADMIN,
@@ -41,8 +41,6 @@ class UserRepositoryImpl : UserRepository {
             passwordHash = PasswordHasher.hash("Student123!")
         )
     )
-
-    private val favoritesByUserId = mutableMapOf<Long, MutableSet<Int>>()
 
     override suspend fun findByEmail(email: String): User? {
         return usersByEmail[email.trim().lowercase()]

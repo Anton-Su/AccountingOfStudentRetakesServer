@@ -1,7 +1,7 @@
 package com.example
 
-import Security.currentEmail
-import Security.requireRole
+import security.currentEmail
+import security.requireRole
 import com.example.dI.AppContainer
 import domain.model.UserRole
 import io.ktor.server.application.*

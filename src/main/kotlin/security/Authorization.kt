@@ -1,4 +1,4 @@
-package Security
+package security
 
 import domain.model.UserRole
 import io.ktor.server.application.ApplicationCall

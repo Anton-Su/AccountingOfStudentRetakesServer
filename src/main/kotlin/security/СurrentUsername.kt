@@ -1,4 +1,4 @@
-package Security
+package security
 
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.jwt.JWTPrincipal

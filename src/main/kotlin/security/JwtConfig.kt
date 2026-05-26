@@ -1,4 +1,4 @@
-package Security
+package security
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
