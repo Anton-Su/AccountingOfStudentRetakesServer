@@ -16,11 +16,11 @@ object JwtConfig {
         .withIssuer(ISSUER)
         .build()
 
-    fun generateToken(username: String, role: String): String {
+    fun generateToken(email: String, role: String): String {
         return JWT.create()
             .withAudience(AUDIENCE)
             .withIssuer(ISSUER)
-            .withClaim("username", username)
+            .withClaim("email", email)
             .withClaim("role", role)
             .withExpiresAt(Date(System.currentTimeMillis() + VALIDITY))
             .sign(Algorithm.HMAC256(SECRET))
