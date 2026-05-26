@@ -1,8 +1,6 @@
 package controller
 
-import data.dto.CreateRetakeRequestDto
-import data.dto.CreateRetakeResponseDto
-import data.dto.TeacherDto
+import data.dto.*
 import domain.model.UserRole
 import domain.usecases.CreateRetakeUseCase
 import domain.usecases.GetTeachersByDisciplineUseCase
@@ -38,7 +36,7 @@ class AdminController(
                     } catch (e: IllegalArgumentException) {
                         return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
                     }
-                    call.respond(teachers.map { TeacherDto(it.userId, it.disciplines) })
+                    call.respond(teachers.map { it.toTeacherDto() })
                 }
                 post("admin/create_retake") {
                     call.requireRole(UserRole.ADMIN)
@@ -54,22 +52,11 @@ class AdminController(
                     } catch (e: IllegalArgumentException) {
                         return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
                     }
-                    call.respond(
-                        HttpStatusCode.Created,
-                        CreateRetakeResponseDto(
-                            id = retake.id,
-                            startAt = retake.startAt.toString(),
-                            endAt = retake.endAt.toString(),
-                            teacherIds = retake.teacherIds,
-                            type = retake.type,
-                            admission = retake.admission
-                        )
-                    )
+                    call.respond(HttpStatusCode.Created, retake.toCreateRetakeResponseDto())
                 }
                 put("admin/redact_retake") {
                     call.requireRole(UserRole.ADMIN)
-                    val request = call.receive<data.dto.CreateRetakeRequestDto>()
-                    // expecting id in query param or body? We'll expect id in query param 'id'
+                    val request = call.receive<CreateRetakeRequestDto>()
                     val idParam = call.request.queryParameters["id"]
                         ?: return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Query parameter 'id' is required"))
                     val id = try { idParam.toLong() } catch (_: Exception) {
@@ -87,14 +74,7 @@ class AdminController(
                     } catch (e: IllegalArgumentException) {
                         return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
                     }
-                    call.respond(HttpStatusCode.OK, CreateRetakeResponseDto(
-                        id = updated.id,
-                        startAt = updated.startAt.toString(),
-                        endAt = updated.endAt.toString(),
-                        teacherIds = updated.teacherIds,
-                        type = updated.type,
-                        admission = updated.admission
-                    ))
+                    call.respond(HttpStatusCode.OK, updated.toCreateRetakeResponseDto())
                 }
             }
         }
