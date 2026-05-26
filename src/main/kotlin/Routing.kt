@@ -35,4 +35,5 @@ fun Application.configureRouting() {
         }
     }
     AppContainer.authController.configure(this)
+    AppContainer.adminController.configure(this)
 }
