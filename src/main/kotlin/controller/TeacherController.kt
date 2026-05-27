@@ -1,0 +1,134 @@
+package controller
+
+import data.dto.*
+import domain.model.UserRole
+import domain.repository.UserRepository
+import domain.repository.StudentRepository
+import domain.usecases.GetTeacherRetakesUseCase
+import domain.usecases.GetRetakeDetailsUseCase
+import domain.usecases.GradeStudentUseCase
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.authenticate
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
+import security.currentEmail
+import security.requireRole
+
+class TeacherController(
+    private val userRepository: UserRepository,
+    private val studentRepository: StudentRepository,
+    private val getTeacherRetakesUseCase: GetTeacherRetakesUseCase,
+    private val getRetakeDetailsUseCase: GetRetakeDetailsUseCase,
+    private val gradeStudentUseCase: GradeStudentUseCase
+) {
+    fun configure(application: Application) {
+        application.routing {
+            authenticate("auth-jwt") {
+                get("teacher/retakes") {
+                    call.requireRole(UserRole.TEACHER)
+                    val email = call.currentEmail() ?: return@get call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid token")
+                    )
+                    val user = userRepository.findByEmail(email) ?: return@get call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "User not found")
+                    )
+                    val teacherId = user.id.toInt()
+                    val retakes = try {
+                        getTeacherRetakesUseCase(teacherId.toLong())
+                    } catch (e: IllegalArgumentException) {
+                        return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
+                    }
+                    call.respond(retakes.map { it.toRetakeDetailDto() })
+                }
+
+                get("teacher/retake/{retakeId}") {
+                    call.requireRole(UserRole.TEACHER)
+                    val email = call.currentEmail() ?: return@get call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid token")
+                    )
+                    val user = userRepository.findByEmail(email) ?: return@get call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "User not found")
+                    )
+                    val teacherId = user.id.toInt()
+                    val retakeId = call.pathRetakeId() ?: return@get
+
+                    val details = try {
+                        getRetakeDetailsUseCase(retakeId)
+                    } catch (e: IllegalArgumentException) {
+                        return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
+                    }
+                    if (!details.retake.teacherIds.contains(teacherId.toLong())) {
+                        return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
+                    }
+                    call.respond(
+                        mapOf(
+                            "retake" to details.retake.toRetakeDetailDto(),
+                            "enrollments" to details.enrollments.map { it.toEnrollmentDto() }
+                        )
+                    )
+                }
+                post("teacher/retake/{retakeId}/student/{studentId}/grade") {
+                    call.requireRole(UserRole.TEACHER)
+                    val email = call.currentEmail() ?: return@post call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid token")
+                    )
+                    val user = userRepository.findByEmail(email) ?: return@post call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "User not found")
+                    )
+                    val teacherId = user.id.toInt()
+                    val retakeId = call.pathRetakeId() ?: return@post
+                    val studentId = call.pathStudentId() ?: return@post
+
+                    val request = try {
+                        call.receive<GradeRequestDto>()
+                    } catch (_: Exception) {
+                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid request body"))
+                    }
+
+                    val retake = studentRepository.findRetakeById(retakeId) ?: return@post call.respond(
+                        HttpStatusCode.NotFound,
+                        mapOf("error" to "Retake not found")
+                    )
+                    if (!retake.teacherIds.contains(teacherId.toLong())) {
+                        return@post call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
+                    }
+                    val enrollment = try {
+                        gradeStudentUseCase(retakeId, studentId, request.score)
+                    } catch (e: IllegalArgumentException) {
+                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
+                    }
+                    call.respond(HttpStatusCode.OK, enrollment.toEnrollmentDto())
+                }
+            }
+        }
+    }
+
+    private suspend fun ApplicationCall.pathRetakeId(): Long? {
+        val raw = parameters["retakeId"] ?: return null
+        return raw.toLongOrNull() ?: run {
+            respond(HttpStatusCode.BadRequest, mapOf("error" to "Path parameter 'retakeId' must be a number"))
+            null
+        }
+    }
+
+    private suspend fun ApplicationCall.pathStudentId(): Long? {
+        val raw = parameters["studentId"] ?: return null
+        return raw.toLongOrNull() ?: run {
+            respond(HttpStatusCode.BadRequest, mapOf("error" to "Path parameter 'studentId' must be a number"))
+            null
+        }
+    }
+}
+
+

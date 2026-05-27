@@ -2,7 +2,7 @@ package com.example
 
 import security.currentEmail
 import security.requireRole
-import com.example.dI.AppContainer
+import dI.AppContainer
 import domain.model.UserRole
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
@@ -37,4 +37,5 @@ fun Application.configureRouting() {
     AppContainer.authController.configure(this)
     AppContainer.studentController.configure(this)
     AppContainer.adminController.configure(this)
+    AppContainer.teacherController.configure(this)
 }

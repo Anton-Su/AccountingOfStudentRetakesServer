@@ -3,7 +3,10 @@ package data.store
 import domain.model.Debt
 import domain.model.DebtStatus
 import domain.model.Retake
+import domain.model.Grade
+import domain.model.RetakeEnrollment
 import domain.model.Subject
+import domain.model.SubjectStudent
 import domain.model.Teacher
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicLong
@@ -31,4 +34,11 @@ object InMemoryAcademicStore {
     val enrollmentByDebtId: MutableMap<Long, Long> = mutableMapOf()
 
     val nextRetakeId = AtomicLong(1)
+    val nextEnrollmentId = AtomicLong(1)
+    val nextGradeId = AtomicLong(1)
+    val nextSubjectStudentId = AtomicLong(1)
+
+    val enrollments: MutableList<RetakeEnrollment> = mutableListOf()
+    val grades: MutableList<Grade> = mutableListOf()
+    val subjectStudents: MutableList<SubjectStudent> = mutableListOf()
 }
