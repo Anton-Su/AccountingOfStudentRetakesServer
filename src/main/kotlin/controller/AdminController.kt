@@ -31,28 +31,20 @@ class AdminController(
                             HttpStatusCode.BadRequest,
                             mapOf("error" to "Query parameter 'discipline' is required")
                         )
-                    val teachers = try {
-                        getTeachersByDisciplineUseCase(discipline)
-                    } catch (e: IllegalArgumentException) {
-                        return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    val teachers = getTeachersByDisciplineUseCase(discipline)
                     call.respond(teachers.map { it.toTeacherDto() })
                 }
                 post("admin/create_retake") {
                     call.requireRole(UserRole.ADMIN)
                     val request = call.receive<CreateRetakeRequestDto>()
-                    val retake = try {
-                        createRetakeUseCase(
+                    val retake = createRetakeUseCase(
                             startAtIso = request.startAt,
                             endAtIso = request.endAt,
                             teacherIds = request.teacherIds,
                             type = request.type,
                             place = request.place,
                             admission = request.admission
-                        )
-                    } catch (e: IllegalArgumentException) {
-                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    )
                     call.respond(HttpStatusCode.Created, retake.toCreateRetakeResponseDto())
                 }
                 put("admin/redact_retake") {
@@ -60,11 +52,11 @@ class AdminController(
                     val request = call.receive<CreateRetakeRequestDto>()
                     val idParam = call.request.queryParameters["id"]
                         ?: return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Query parameter 'id' is required"))
-                    val id = try { idParam.toLong() } catch (_: Exception) {
+                    val id = try { idParam.toLong() }
+                    catch (_: Exception) {
                         return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Query parameter 'id' must be a number"))
                     }
-                    val updated = try {
-                        redactRetakeUseCase(
+                    val updated = redactRetakeUseCase(
                             id = id,
                             startAtIso = request.startAt,
                             endAtIso = request.endAt,
@@ -72,10 +64,7 @@ class AdminController(
                             type = request.type,
                             place = request.place,
                             admission = request.admission
-                        )
-                    } catch (e: IllegalArgumentException) {
-                        return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    )
                     call.respond(HttpStatusCode.OK, updated.toCreateRetakeResponseDto())
                 }
             }

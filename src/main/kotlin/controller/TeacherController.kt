@@ -40,14 +40,9 @@ class TeacherController(
                         mapOf("error" to "User not found")
                     )
                     val teacherId = user.id.toInt()
-                    val retakes = try {
-                        getTeacherRetakesUseCase(teacherId.toLong())
-                    } catch (e: IllegalArgumentException) {
-                        return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    val retakes = getTeacherRetakesUseCase(teacherId.toLong())
                     call.respond(retakes.map { it.toRetakeDetailDto() })
                 }
-
                 get("teacher/retake/{retakeId}") {
                     call.requireRole(UserRole.TEACHER)
                     val email = call.currentEmail() ?: return@get call.respond(
@@ -60,12 +55,7 @@ class TeacherController(
                     )
                     val teacherId = user.id.toInt()
                     val retakeId = call.pathRetakeId() ?: return@get
-
-                    val details = try {
-                        getRetakeDetailsUseCase(retakeId)
-                    } catch (e: IllegalArgumentException) {
-                        return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    val details = getRetakeDetailsUseCase(retakeId)
                     if (!details.retake.teacherIds.contains(teacherId.toLong())) {
                         return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
                     }
@@ -89,13 +79,7 @@ class TeacherController(
                     val teacherId = user.id.toInt()
                     val retakeId = call.pathRetakeId() ?: return@post
                     val studentId = call.pathStudentId() ?: return@post
-
-                    val request = try {
-                        call.receive<GradeRequestDto>()
-                    } catch (_: Exception) {
-                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid request body"))
-                    }
-
+                    val request = call.receive<GradeRequestDto>()
                     val retake = studentRepository.findRetakeById(retakeId) ?: return@post call.respond(
                         HttpStatusCode.NotFound,
                         mapOf("error" to "Retake not found")
@@ -103,11 +87,7 @@ class TeacherController(
                     if (!retake.teacherIds.contains(teacherId.toLong())) {
                         return@post call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
                     }
-                    val enrollment = try {
-                        gradeStudentUseCase(retakeId, studentId, request.score)
-                    } catch (e: IllegalArgumentException) {
-                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    val enrollment = gradeStudentUseCase(retakeId, studentId, request.score)
                     call.respond(HttpStatusCode.OK, enrollment.toEnrollmentDto())
                 }
             }

@@ -35,24 +35,16 @@ class StudentController(
                     call.requireRole(UserRole.STUDENT)
                     val studentId = call.pathStudentId() ?: return@get
                     if (!call.requireOwnStudent(studentId)) return@get
-                    val debts = try {
-                        getStudentDebtsUseCase(studentId)
-                    } catch (e: IllegalArgumentException) {
-                        return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    val debts = getStudentDebtsUseCase(studentId)
                     call.respond(debts.map { it.toDto() })
                 }
-                put("api/student/{studentId}/debts/{debtId}/retakes/{retakeId}") {
+                post("api/student/{studentId}/debts/{debtId}/retakes/{retakeId}") {
                     call.requireRole(UserRole.STUDENT)
-                    val studentId = call.pathStudentId() ?: return@put
-                    if (!call.requireOwnStudent(studentId)) return@put
-                    val debtId = call.longPathParam("debtId") ?: return@put
-                    val retakeId = call.longPathParam("retakeId") ?: return@put
-                    val updated = try {
-                        enrollToRetakeUseCase(studentId, debtId, retakeId)
-                    } catch (e: IllegalArgumentException) {
-                        return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    val studentId = call.pathStudentId() ?: return@post
+                    if (!call.requireOwnStudent(studentId)) return@post
+                    val debtId = call.longPathParam("debtId") ?: return@post
+                    val retakeId = call.longPathParam("retakeId") ?: return@post
+                    val updated = enrollToRetakeUseCase(studentId, debtId, retakeId)
                     call.respond(updated.toDto())
                 }
                 delete("api/student/{studentId}/debts/{debtId}/retakes/{retakeId}") {
@@ -61,23 +53,15 @@ class StudentController(
                     if (!call.requireOwnStudent(studentId)) return@delete
                     val debtId = call.longPathParam("debtId") ?: return@delete
                     val retakeId = call.longPathParam("retakeId") ?: return@delete
-                    val updated = try {
-                        cancelRetakeEnrollmentUseCase(studentId, debtId, retakeId)
-                    } catch (e: IllegalArgumentException) {
-                        return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
+                    val updated = cancelRetakeEnrollmentUseCase(studentId, debtId, retakeId)
                     call.respond(updated.toDto())
                 }
                 post("api/student/{studentId}/comments") {
                     call.requireRole(UserRole.STUDENT)
                     val studentId = call.pathStudentId() ?: return@post
                     if (!call.requireOwnStudent(studentId)) return@post
-                    val request = try {
-                        call.receive<CreateCommentRequestDto>()
-                    } catch (_: Exception) {
-                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid request body"))
-                    }
-                    val created = try {
+                    val request = call.receive<CreateCommentRequestDto>()
+                    val created =
                         createCommentUseCase(
                             studentId = studentId,
                             gradeplace = request.gradeplace,
@@ -86,9 +70,6 @@ class StudentController(
                             comment = request.comment,
                             retakeId = request.retakeId,
                         )
-                    } catch (e: IllegalArgumentException) {
-                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
-                    }
                     call.respond(HttpStatusCode.Created, created.toDto())
                 }
             }

@@ -3,6 +3,7 @@ package plugins
 import security.ForbiddenException
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 
@@ -19,6 +20,18 @@ fun Application.configureStatusPages() {
         }
         status(HttpStatusCode.NotFound) { call, _ ->
             call.respond(HttpStatusCode.NotFound, mapOf("error" to "Not Found"))
+        }
+        exception<IllegalArgumentException> { call, cause ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to cause.message)
+            )
+        }
+        exception<ContentTransformationException> { call, _ ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to "Invalid request body")
+            )
         }
     }
 }

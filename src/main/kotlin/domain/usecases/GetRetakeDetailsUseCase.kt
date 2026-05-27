@@ -1,9 +1,7 @@
 package domain.usecases
 
-
 import domain.model.RetakeDetails
 import domain.repository.StudentRepository
-
 
 
 class GetRetakeDetailsUseCase(
