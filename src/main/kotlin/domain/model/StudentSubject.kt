@@ -7,6 +7,6 @@ data class StudentSubject(
     val studentId: Long,
     val subjectId: Long,
     val status: StudentSubjectStatus,
-    val score: Long,
-    val updated: Instant
+    val score: Int? = null,
+    val updatedAt: Instant
 )
