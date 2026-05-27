@@ -13,71 +13,84 @@ object DatabaseSeeder {
         if (UsersTable.selectAll().any()) return
         insertUser(
             role = UserRole.ADMIN,
-            firstName = "Admin",
-            secondName = "System",
-            lastName = "User",
-            gender = "unknown",
-            age = 30,
-            email = "admin@example.com",
+            firstName = "Александр",
+            secondName = "Сергеевич",
+            lastName = "Волков",
+            gender = "male",
+            age = 42,
+            email = "volkov.a.s@edu.mirea.ru",
             rawPassword = "Admin123!"
         )
         val teacher1Id = insertUser(
             role = UserRole.TEACHER,
-            firstName = "Teacher",
-            secondName = "Math",
-            lastName = "One",
-            gender = "unknown",
-            age = 35,
-            email = "teacher1@example.com",
+            firstName = "Ирина",
+            secondName = "Андреевна",
+            lastName = "Кузнецова",
+            gender = "female",
+            age = 39,
+            email = "kuznetsova.i.a@edu.mirea.ru",
             rawPassword = "Teacher123!"
         )
         val teacher2Id = insertUser(
             role = UserRole.TEACHER,
-            firstName = "Teacher",
-            secondName = "Physics",
-            lastName = "Two",
-            gender = "unknown",
-            age = 38,
-            email = "teacher2@example.com",
+            firstName = "Дмитрий",
+            secondName = "Олегович",
+            lastName = "Смирнов",
+            gender = "male",
+            age = 44,
+            email = "smirnov.d.o@edu.mirea.ru",
             rawPassword = "Teacher123!"
         )
         val studentId = insertUser(
             role = UserRole.STUDENT,
-            firstName = "Student",
-            secondName = "Default",
-            lastName = "User",
-            gender = "unknown",
+            firstName = "Максим",
+            secondName = "Игоревич",
+            lastName = "Петров",
+            gender = "male",
             age = 20,
-            email = "student@example.com",
+            email = "petrov.m.i@edu.mirea.ru",
             rawPassword = "Student123!"
         )
         insertStudentProfile(studentId, "ИКБО-61-23")
         insertTeacherProfile(teacher1Id)
         insertTeacherProfile(teacher2Id)
-        insertTeacherDiscipline(teacher1Id, "math")
-        insertTeacherDiscipline(teacher1Id, "algebra")
-        insertTeacherDiscipline(teacher2Id, "physics")
-        insertTeacherDiscipline(teacher2Id, "mechanics")
-        val mathSubjectId = insertSubject("Math")
-        val physicsSubjectId = insertSubject("Physics")
-        insertSubject("Programming")
-        val mathDebtId = insertDebt(
+        insertTeacherDiscipline(
+            teacher1Id,
+            "Конфигурационное управление"
+        )
+        insertTeacherDiscipline(
+            teacher1Id,
+            "Мобильная разработка"
+        )
+        insertTeacherDiscipline(
+            teacher2Id,
+            "Основы российской государственности"
+        )
+        val configManagementSubjectId =
+            insertSubject("Конфигурационное управление")
+        val mobileDevSubjectId =
+            insertSubject("Мобильная разработка")
+        val statehoodSubjectId =
+            insertSubject("Основы российской государственности")
+        val configDebtId = insertDebt(
             studentId = studentId,
-            subjectId = mathSubjectId,
+            subjectId = configManagementSubjectId,
             teacherId = teacher1Id,
             createdAt = 1_715_500_000_000,
-            status = DebtStatus.ACTIVE
+            status = DebtStatus.ACTIVE,
+            place = "Ауд. 101"
         )
         insertDebt(
             studentId = studentId,
-            subjectId = physicsSubjectId,
+            subjectId = statehoodSubjectId,
             teacherId = teacher2Id,
             createdAt = 1_715_586_400_000,
-            status = DebtStatus.ACTIVE
+            status = DebtStatus.ACTIVE,
+            place = "Ауд. 102"
         )
         val retakeId = insertRetake(
-            type = "Exam retake",
-            admission = "Winter 2026",
+            type = "Экзамен",
+            admission = "40 баллов допуска",
             startAt = 1_716_000_000_000,
             endAt = 1_716_086_400_000
         )
@@ -86,14 +99,18 @@ object DatabaseSeeder {
         insertEnrollment(
             retakeId = retakeId,
             studentId = studentId,
-            debtId = mathDebtId,
-            score = 85
+            debtId = configDebtId
         )
         val gradedAt = 1_716_000_100_000
-        insertGrade(retakeId = retakeId, studentId = studentId, score = 85, gradedAt = gradedAt)
+        insertGrade(
+            retakeId = retakeId,
+            studentId = studentId,
+            score = 85,
+            gradedAt = gradedAt
+        )
         insertSubjectStudent(
             studentId = studentId,
-            subjectId = mathSubjectId,
+            subjectId = configManagementSubjectId,
             retakeId = retakeId,
             score = 85,
             gradedAt = gradedAt
@@ -149,12 +166,14 @@ object DatabaseSeeder {
         subjectId: EntityID<Long>,
         teacherId: EntityID<Long>,
         createdAt: Long,
-        status: DebtStatus
+        status: DebtStatus,
+        place: String
     ): EntityID<Long> = DebtsTable.insertAndGetId {
         it[DebtsTable.studentId] = studentId
         it[DebtsTable.subjectId] = subjectId
         it[DebtsTable.teacherId] = teacherId
         it[DebtsTable.createdAt] = createdAt
+        it[DebtsTable.place] = place
         it[DebtsTable.status] = status
     }
 
@@ -173,12 +192,11 @@ object DatabaseSeeder {
         }
     }
 
-    private fun insertEnrollment(retakeId: EntityID<Long>, studentId: EntityID<Long>, debtId: EntityID<Long>, score: Int?): EntityID<Long> =
+    private fun insertEnrollment(retakeId: EntityID<Long>, studentId: EntityID<Long>, debtId: EntityID<Long>): EntityID<Long> =
         RetakeEnrollmentsTable.insertAndGetId {
             it[RetakeEnrollmentsTable.retakeId] = retakeId
             it[RetakeEnrollmentsTable.studentId] = studentId
             it[RetakeEnrollmentsTable.debtId] = debtId
-            it[RetakeEnrollmentsTable.score] = score
         }
 
     private fun insertGrade(retakeId: EntityID<Long>, studentId: EntityID<Long>, score: Int, gradedAt: Long) {

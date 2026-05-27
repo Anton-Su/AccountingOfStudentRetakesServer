@@ -5,5 +5,4 @@ data class RetakeEnrollment(
     val retakeId: Long,
     val studentId: Long,
     val debtId: Long,
-    val score: Int? = null
 )

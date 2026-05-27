@@ -22,7 +22,6 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import java.time.Instant
 
 class StudentRepositoryImpl : StudentRepository {
@@ -56,7 +55,6 @@ class StudentRepositoryImpl : StudentRepository {
             it[RetakeEnrollmentsTable.retakeId] = retakeId
             it[RetakeEnrollmentsTable.studentId] = studentId
             it[RetakeEnrollmentsTable.debtId] = debtId
-            it[RetakeEnrollmentsTable.score] = null
         }
         debt
     }
@@ -96,10 +94,7 @@ class StudentRepositoryImpl : StudentRepository {
                     row[RetakeEnrollmentsTable.studentId].value == studentId
             }
             ?: throw IllegalArgumentException("Enrollment not found for retake $retakeId and student $studentId")
-        RetakeEnrollmentsTable.update({ RetakeEnrollmentsTable.id eq enrollmentRow[RetakeEnrollmentsTable.id].value }) {
-            it[RetakeEnrollmentsTable.score] = score
-        }
-        val updatedEnrollment = enrollmentRow.toEnrollment().copy(score = score)
+        val updatedEnrollment = enrollmentRow.toEnrollment()
         val now = Instant.now()
         val grade = Grade(
             id = GradesTable.insertAndGetId {
@@ -159,6 +154,7 @@ class StudentRepositoryImpl : StudentRepository {
         studentId = this[DebtsTable.studentId].value,
         subjectId = this[DebtsTable.subjectId].value,
         teacherId = this[DebtsTable.teacherId].value,
+        place = this[DebtsTable.place],
         createdAt = this[DebtsTable.createdAt],
         status = this[DebtsTable.status]
     )
@@ -187,8 +183,7 @@ class StudentRepositoryImpl : StudentRepository {
         id = this[RetakeEnrollmentsTable.id].value,
         retakeId = this[RetakeEnrollmentsTable.retakeId].value,
         studentId = this[RetakeEnrollmentsTable.studentId].value,
-        debtId = this[RetakeEnrollmentsTable.debtId].value,
-        score = this[RetakeEnrollmentsTable.score]
+        debtId = this[RetakeEnrollmentsTable.debtId].value
     )
 }
 
