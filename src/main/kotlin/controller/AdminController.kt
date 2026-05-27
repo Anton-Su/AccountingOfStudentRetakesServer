@@ -3,6 +3,7 @@ package controller
 import data.dto.*
 import domain.model.UserRole
 import domain.usecases.CreateRetakeUseCase
+import domain.usecases.GetSubjectsUseCase
 import domain.usecases.GetTeachersByDisciplineUseCase
 import domain.usecases.RedactRetakeUseCase
 import io.ktor.http.HttpStatusCode
@@ -18,6 +19,7 @@ import security.requireRole
 
 class AdminController(
     private val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase,
+    private val getSubjectsUseCase: GetSubjectsUseCase,
     private val createRetakeUseCase: CreateRetakeUseCase,
     private val redactRetakeUseCase: RedactRetakeUseCase
 ) {
@@ -33,6 +35,11 @@ class AdminController(
                         )
                     val teachers = getTeachersByDisciplineUseCase(discipline)
                     call.respond(teachers.map { it.toTeacherDto() })
+                }
+                get("admin/subjects") {
+                    call.requireRole(UserRole.ADMIN)
+                    val subjects = getSubjectsUseCase()
+                    call.respond(subjects.map { it.toSubjectDto() })
                 }
                 post("admin/create_retake") {
                     call.requireRole(UserRole.ADMIN)

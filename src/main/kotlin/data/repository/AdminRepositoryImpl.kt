@@ -3,7 +3,9 @@ package data.repository
 import data.databases.TeacherDisciplinesTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
+import data.databases.SubjectsTable
 import domain.model.Retake
+import domain.model.Subject
 import domain.model.Teacher
 import domain.repository.AdminRepository
 import org.jetbrains.exposed.sql.ResultRow
@@ -29,6 +31,16 @@ class AdminRepositoryImpl : AdminRepository {
                 .map { it[TeacherDisciplinesTable.discipline] }
             if (disciplines.isEmpty()) null else Teacher(userId = teacherId, disciplines = disciplines)
         }
+    }
+
+    override suspend fun findAllSubjects(): List<Subject> = transaction {
+        SubjectsTable.selectAll()
+            .map {
+                Subject(
+                    id = it[SubjectsTable.id].value,
+                    title = it[SubjectsTable.title]
+                )
+            }
     }
 
     override suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?): Retake = transaction {
