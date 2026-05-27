@@ -1,102 +1,194 @@
 package data.repository
 
-import data.store.InMemoryAcademicStore
+import data.databases.DebtsTable
+import data.databases.GradesTable
+import data.databases.RetakeEnrollmentsTable
+import data.databases.RetakeTeachersTable
+import data.databases.RetakesTable
+import data.databases.SubjectStudentsTable
+import data.databases.SubjectsTable
 import domain.model.Debt
 import domain.model.DebtStatus
 import domain.model.Grade
 import domain.model.Retake
 import domain.model.RetakeEnrollment
 import domain.model.Subject
-import domain.model.SubjectStudent
 import domain.repository.StudentRepository
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import java.time.Instant
 
 class StudentRepositoryImpl : StudentRepository {
-    override suspend fun findDebtsByStudentId(studentId: Long): List<Debt> =
-        InMemoryAcademicStore.debts.filter { it.studentId == studentId }
-
-    override suspend fun findSubjectById(subjectId: Long): Subject? =
-        InMemoryAcademicStore.subjects.firstOrNull { it.id == subjectId }
-
-    override suspend fun findRetakeById(retakeId: Long): Retake? =
-        InMemoryAcademicStore.retakes.firstOrNull { it.id == retakeId }
-
-    override suspend fun findRetakeIdByDebtId(debtId: Long): Long? =
-        InMemoryAcademicStore.enrollmentByDebtId[debtId]
-
-    override suspend fun enrollToRetake(studentId: Long, debtId: Long, retakeId: Long): Debt {
-        val debt = requireOwnedActiveDebt(studentId, debtId)
-        require(findRetakeById(retakeId) != null) { "Retake with id $retakeId not found" }
-        InMemoryAcademicStore.enrollmentByDebtId[debt.id] = retakeId
-        return debt
+    override suspend fun findDebtsByStudentId(studentId: Long): List<Debt> = transaction {
+        DebtsTable.selectAll()
+            .filter { it[DebtsTable.studentId].value == studentId }
+            .map { it.toDebt() }
     }
 
-    override suspend fun cancelRetakeEnrollment(studentId: Long, debtId: Long, retakeId: Long): Debt {
-        val debt = requireOwnedDebt(studentId, debtId)
-        val currentRetakeId = InMemoryAcademicStore.enrollmentByDebtId[debt.id]
+    override suspend fun findSubjectById(subjectId: Long): Subject? = transaction {
+        SubjectsTable.selectAll()
+            .firstOrNull { it[SubjectsTable.id].value == subjectId }
+            ?.toSubject()
+    }
+
+    override suspend fun findRetakeById(retakeId: Long): Retake? = transaction {
+        RetakesTable.selectAll()
+            .firstOrNull { it[RetakesTable.id].value == retakeId }
+            ?.toRetake()
+    }
+
+    override suspend fun findRetakeIdByDebtId(debtId: Long): Long? = transaction {
+        findRetakeIdByDebtIdInternal(debtId)
+    }
+
+    override suspend fun enrollToRetake(studentId: Long, debtId: Long, retakeId: Long): Debt = transaction {
+        val debt = requireOwnedActiveDebtInternal(studentId, debtId)
+        require(findRetakeByIdInternal(retakeId) != null) { "Retake with id $retakeId not found" }
+        RetakeEnrollmentsTable.deleteWhere { RetakeEnrollmentsTable.debtId eq debtId }
+        RetakeEnrollmentsTable.insert {
+            it[RetakeEnrollmentsTable.retakeId] = retakeId
+            it[RetakeEnrollmentsTable.studentId] = studentId
+            it[RetakeEnrollmentsTable.debtId] = debtId
+            it[RetakeEnrollmentsTable.score] = null
+        }
+        debt
+    }
+
+    override suspend fun cancelRetakeEnrollment(studentId: Long, debtId: Long, retakeId: Long): Debt = transaction {
+        val debt = requireOwnedDebtInternal(studentId, debtId)
+        val currentRetakeId = findRetakeIdByDebtIdInternal(debtId)
             ?: throw IllegalArgumentException("Debt ${debt.id} is not enrolled to any retake")
         require(currentRetakeId == retakeId) { "Debt ${debt.id} is enrolled to another retake" }
-        InMemoryAcademicStore.enrollmentByDebtId.remove(debt.id)
-        return debt
+        RetakeEnrollmentsTable.deleteWhere {
+            (RetakeEnrollmentsTable.debtId eq debtId) and
+                (RetakeEnrollmentsTable.studentId eq studentId) and
+                (RetakeEnrollmentsTable.retakeId eq retakeId)
+        }
+        debt
     }
 
-    override suspend fun findRetakesByTeacherId(teacherId: Long): List<Retake> =
-        InMemoryAcademicStore.retakes.filter { it.teacherIds.contains(teacherId) }
+    override suspend fun findRetakesByTeacherId(teacherId: Long): List<Retake> = transaction {
+        val retakeIds = RetakeTeachersTable.selectAll()
+            .filter { it[RetakeTeachersTable.teacherId].value == teacherId }
+            .map { it[RetakeTeachersTable.retakeId].value }
+            .distinct()
+        retakeIds.mapNotNull { findRetakeByIdInternal(it) }
+    }
 
-    override suspend fun findEnrollmentsByRetakeId(retakeId: Long): List<RetakeEnrollment> =
-        InMemoryAcademicStore.enrollments.filter { it.retakeId == retakeId }
+    override suspend fun findEnrollmentsByRetakeId(retakeId: Long): List<RetakeEnrollment> = transaction {
+        RetakeEnrollmentsTable.selectAll()
+            .filter { it[RetakeEnrollmentsTable.retakeId].value == retakeId }
+            .map { it.toEnrollment() }
+    }
 
-    override suspend fun gradeStudent(retakeId: Long, studentId: Long, score: Int): RetakeEnrollment {
+    override suspend fun gradeStudent(retakeId: Long, studentId: Long, score: Int): RetakeEnrollment = transaction {
         require(score in 0..100) { "Score must be between 0 and 100" }
-        val enrollment = InMemoryAcademicStore.enrollments.firstOrNull {
-            it.retakeId == retakeId && it.studentId == studentId
-        } ?: throw IllegalArgumentException("Enrollment not found for retake $retakeId and student $studentId")
-        val updated = enrollment.copy(score = score)
-        val idx = InMemoryAcademicStore.enrollments.indexOf(enrollment)
-        InMemoryAcademicStore.enrollments[idx] = updated
+        val enrollmentRow = RetakeEnrollmentsTable.selectAll()
+            .firstOrNull { row ->
+                row[RetakeEnrollmentsTable.retakeId].value == retakeId &&
+                    row[RetakeEnrollmentsTable.studentId].value == studentId
+            }
+            ?: throw IllegalArgumentException("Enrollment not found for retake $retakeId and student $studentId")
+        RetakeEnrollmentsTable.update({ RetakeEnrollmentsTable.id eq enrollmentRow[RetakeEnrollmentsTable.id].value }) {
+            it[RetakeEnrollmentsTable.score] = score
+        }
+        val updatedEnrollment = enrollmentRow.toEnrollment().copy(score = score)
+        val now = Instant.now()
         val grade = Grade(
-            id = InMemoryAcademicStore.nextGradeId.getAndIncrement(),
+            id = GradesTable.insertAndGetId {
+                it[GradesTable.retakeId] = retakeId
+                it[GradesTable.studentId] = studentId
+                it[GradesTable.score] = score
+                it[GradesTable.gradedAt] = now.toEpochMilli()
+                it[GradesTable.status] = "accepted"
+            }.value,
             retakeId = retakeId,
             studentId = studentId,
             score = score,
-            gradedAt = Instant.now()
+            gradedAt = now,
+            status = "accepted"
         )
-        InMemoryAcademicStore.grades.add(grade)
-
-        val debt = InMemoryAcademicStore.debts.firstOrNull { it.id == enrollment.debtId }
-            ?: throw IllegalArgumentException("Debt with id ${enrollment.debtId} not found")
-        val subjectStudentIdx = InMemoryAcademicStore.subjectStudents.indexOfFirst {
-            it.studentId == studentId && it.subjectId == debt.subjectId
+        val debt = DebtsTable.selectAll()
+            .first { it[DebtsTable.id].value == updatedEnrollment.debtId }
+        val subjectId = debt[DebtsTable.subjectId].value
+        SubjectStudentsTable.deleteWhere {
+            (SubjectStudentsTable.studentId eq studentId) and
+                (SubjectStudentsTable.subjectId eq subjectId)
         }
-        val subjectStudent = SubjectStudent(
-            id = if (subjectStudentIdx >= 0) {
-                InMemoryAcademicStore.subjectStudents[subjectStudentIdx].id
-            } else {
-                InMemoryAcademicStore.nextSubjectStudentId.getAndIncrement()
-            },
-            studentId = studentId,
-            subjectId = debt.subjectId,
-            retakeId = retakeId,
-            score = score,
-            gradedAt = grade.gradedAt.toEpochMilli()
-        )
-        if (subjectStudentIdx >= 0) {
-            InMemoryAcademicStore.subjectStudents[subjectStudentIdx] = subjectStudent
-        } else {
-            InMemoryAcademicStore.subjectStudents.add(subjectStudent)
+        SubjectStudentsTable.insert {
+            it[SubjectStudentsTable.studentId] = studentId
+            it[SubjectStudentsTable.subjectId] = subjectId
+            it[SubjectStudentsTable.retakeId] = retakeId
+            it[SubjectStudentsTable.score] = score
+            it[SubjectStudentsTable.gradedAt] = grade.gradedAt.toEpochMilli()
         }
-        return updated
+        updatedEnrollment
     }
 
-    private fun requireOwnedDebt(studentId: Long, debtId: Long): Debt {
-        return InMemoryAcademicStore.debts.firstOrNull { it.id == debtId && it.studentId == studentId }
+    private fun requireOwnedDebtInternal(studentId: Long, debtId: Long): Debt =
+        DebtsTable.selectAll()
+            .firstOrNull { row -> row[DebtsTable.id].value == debtId && row[DebtsTable.studentId].value == studentId }
+            ?.toDebt()
             ?: throw IllegalArgumentException("Debt with id $debtId not found for student $studentId")
-    }
 
-    private fun requireOwnedActiveDebt(studentId: Long, debtId: Long): Debt {
-        val debt = requireOwnedDebt(studentId, debtId)
+    private fun requireOwnedActiveDebtInternal(studentId: Long, debtId: Long): Debt {
+        val debt = requireOwnedDebtInternal(studentId, debtId)
         require(debt.status == DebtStatus.ACTIVE) { "Debt ${debt.id} is not active" }
         return debt
     }
+
+    private fun findRetakeByIdInternal(retakeId: Long): Retake? =
+        RetakesTable.selectAll()
+            .firstOrNull { it[RetakesTable.id].value == retakeId }
+            ?.toRetake()
+
+    private fun findRetakeIdByDebtIdInternal(debtId: Long): Long? =
+        RetakeEnrollmentsTable.selectAll()
+            .firstOrNull { it[RetakeEnrollmentsTable.debtId].value == debtId }
+            ?.let { it[RetakeEnrollmentsTable.retakeId].value }
+
+    private fun ResultRow.toDebt(): Debt = Debt(
+        id = this[DebtsTable.id].value,
+        studentId = this[DebtsTable.studentId].value,
+        subjectId = this[DebtsTable.subjectId].value,
+        teacherId = this[DebtsTable.teacherId].value,
+        createdAt = this[DebtsTable.createdAt],
+        status = this[DebtsTable.status]
+    )
+
+    private fun ResultRow.toSubject(): Subject = Subject(
+        id = this[SubjectsTable.id].value,
+        title = this[SubjectsTable.title]
+    )
+
+    private fun ResultRow.toRetake(): Retake {
+        val retakeId = this[RetakesTable.id].value
+        val teacherIds = RetakeTeachersTable.selectAll()
+            .filter { it[RetakeTeachersTable.retakeId].value == retakeId }
+            .map { it[RetakeTeachersTable.teacherId].value }
+        return Retake(
+            id = retakeId,
+            type = this[RetakesTable.type],
+            admission = this[RetakesTable.admission],
+            startAt = Instant.ofEpochMilli(this[RetakesTable.startAt]),
+            endAt = Instant.ofEpochMilli(this[RetakesTable.endAt]),
+            teacherIds = teacherIds
+        )
+    }
+
+    private fun ResultRow.toEnrollment(): RetakeEnrollment = RetakeEnrollment(
+        id = this[RetakeEnrollmentsTable.id].value,
+        retakeId = this[RetakeEnrollmentsTable.retakeId].value,
+        studentId = this[RetakeEnrollmentsTable.studentId].value,
+        debtId = this[RetakeEnrollmentsTable.debtId].value,
+        score = this[RetakeEnrollmentsTable.score]
+    )
 }
 

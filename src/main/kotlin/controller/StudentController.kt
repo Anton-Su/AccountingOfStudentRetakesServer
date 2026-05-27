@@ -38,7 +38,6 @@ class StudentController(
                     }
                     call.respond(debts.map { it.toDto() })
                 }
-
                 put("api/student/{studentId}/debts/{debtId}/retakes/{retakeId}") {
                     call.requireRole(UserRole.STUDENT)
                     val studentId = call.pathStudentId() ?: return@put

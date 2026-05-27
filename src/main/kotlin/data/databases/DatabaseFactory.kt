@@ -12,10 +12,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object DatabaseFactory {
     fun init() {
         val config = HikariConfig().apply {
-            jdbcUrl = "jdbc:postgresql://ep-noisy-sun-aqf5fddp.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require"
+            jdbcUrl = "jdbc:postgresql://ep-cold-wind-aqagg94b.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require"
             driverClassName = "org.postgresql.Driver"
             username = "neondb_owner"
-            password = "npg_y6gOZYwKQ0cV"
+            password = "npg_dbaT4c3mKvIV"
             maximumPoolSize = 10
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
@@ -27,6 +27,7 @@ object DatabaseFactory {
                 UsersTable,
                 StudentsTable,
                 TeachersTable,
+                TeacherDisciplinesTable,
                 SubjectsTable,
                 DebtsTable,
                 RetakesTable,
@@ -40,3 +41,4 @@ object DatabaseFactory {
         println("PostgreSQL (Neon) подключён успешно")
     }
 }
+

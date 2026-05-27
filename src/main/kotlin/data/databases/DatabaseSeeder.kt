@@ -11,7 +11,7 @@ import security.PasswordHasher
 object DatabaseSeeder {
     fun seed() {
         if (UsersTable.selectAll().any()) return
-        val adminId = insertUser(
+        insertUser(
             role = UserRole.ADMIN,
             firstName = "Admin",
             secondName = "System",
@@ -51,12 +51,16 @@ object DatabaseSeeder {
             email = "student@example.com",
             rawPassword = "Student123!"
         )
-        insertStudentProfile(studentId, "CS-101")
+        insertStudentProfile(studentId, "ИКБО-61-23")
         insertTeacherProfile(teacher1Id)
         insertTeacherProfile(teacher2Id)
+        insertTeacherDiscipline(teacher1Id, "math")
+        insertTeacherDiscipline(teacher1Id, "algebra")
+        insertTeacherDiscipline(teacher2Id, "physics")
+        insertTeacherDiscipline(teacher2Id, "mechanics")
         val mathSubjectId = insertSubject("Math")
         val physicsSubjectId = insertSubject("Physics")
-        val programmingSubjectId = insertSubject("Programming")
+        insertSubject("Programming")
         val mathDebtId = insertDebt(
             studentId = studentId,
             subjectId = mathSubjectId,
@@ -64,7 +68,7 @@ object DatabaseSeeder {
             createdAt = 1_715_500_000_000,
             status = DebtStatus.ACTIVE
         )
-        val physicsDebtId = insertDebt(
+        insertDebt(
             studentId = studentId,
             subjectId = physicsSubjectId,
             teacherId = teacher2Id,
@@ -79,7 +83,7 @@ object DatabaseSeeder {
         )
         linkRetakeTeacher(retakeId, teacher1Id)
         linkRetakeTeacher(retakeId, teacher2Id)
-        val enrollmentId = insertEnrollment(
+        insertEnrollment(
             retakeId = retakeId,
             studentId = studentId,
             debtId = mathDebtId,
@@ -126,6 +130,13 @@ object DatabaseSeeder {
     private fun insertTeacherProfile(userId: EntityID<Long>) {
         TeachersTable.insert {
             it[TeachersTable.userId] = userId
+        }
+    }
+
+    private fun insertTeacherDiscipline(userId: EntityID<Long>, discipline: String) {
+        TeacherDisciplinesTable.insert {
+            it[TeacherDisciplinesTable.teacherId] = userId
+            it[TeacherDisciplinesTable.discipline] = discipline
         }
     }
 
