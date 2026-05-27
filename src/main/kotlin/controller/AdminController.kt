@@ -47,6 +47,7 @@ class AdminController(
                             endAtIso = request.endAt,
                             teacherIds = request.teacherIds,
                             type = request.type,
+                            place = request.place,
                             admission = request.admission
                         )
                     } catch (e: IllegalArgumentException) {
@@ -69,6 +70,7 @@ class AdminController(
                             endAtIso = request.endAt,
                             teacherIds = request.teacherIds,
                             type = request.type,
+                            place = request.place,
                             admission = request.admission
                         )
                     } catch (e: IllegalArgumentException) {

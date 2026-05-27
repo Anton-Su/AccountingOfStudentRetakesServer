@@ -34,7 +34,8 @@ object DatabaseFactory {
                 RetakeTeachersTable,
                 RetakeEnrollmentsTable,
                 GradesTable,
-                SubjectStudentsTable
+                SubjectStudentsTable,
+                CommentsTable
             )
             DatabaseSeeder.seed()
         }

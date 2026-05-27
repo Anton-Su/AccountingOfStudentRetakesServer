@@ -8,5 +8,6 @@ data class CreateRetakeRequestDto(
 	val endAt: String,
 	val teacherIds: List<Long>,
 	val type: String,
+	val place: String,
 	val admission: String? = null
 )

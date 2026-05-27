@@ -6,6 +6,6 @@ import java.time.Instant
 
 interface AdminRepository {
     suspend fun findTeachersByDiscipline(discipline: String): List<Teacher>
-    suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, admission: String?): Retake
-    suspend fun updateRetake(id: Long, startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, admission: String?): Retake
+    suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?): Retake
+    suspend fun updateRetake(id: Long, startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?): Retake
 }

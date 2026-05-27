@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import security.PasswordHasher
+import java.time.Instant
 
 object DatabaseSeeder {
     fun seed() {
@@ -77,19 +78,18 @@ object DatabaseSeeder {
             subjectId = configManagementSubjectId,
             teacherId = teacher1Id,
             createdAt = 1_715_500_000_000,
-            status = DebtStatus.ACTIVE,
-            place = "Ауд. 101"
+            status = DebtStatus.ACTIVE
         )
         insertDebt(
             studentId = studentId,
             subjectId = statehoodSubjectId,
             teacherId = teacher2Id,
             createdAt = 1_715_586_400_000,
-            status = DebtStatus.ACTIVE,
-            place = "Ауд. 102"
+            status = DebtStatus.ACTIVE
         )
         val retakeId = insertRetake(
             type = "Экзамен",
+            place = "Ауд. 101",
             admission = "40 баллов допуска",
             startAt = 1_716_000_000_000,
             endAt = 1_716_086_400_000
@@ -166,23 +166,23 @@ object DatabaseSeeder {
         subjectId: EntityID<Long>,
         teacherId: EntityID<Long>,
         createdAt: Long,
-        status: DebtStatus,
-        place: String
+        status: DebtStatus
     ): EntityID<Long> = DebtsTable.insertAndGetId {
         it[DebtsTable.studentId] = studentId
         it[DebtsTable.subjectId] = subjectId
         it[DebtsTable.teacherId] = teacherId
         it[DebtsTable.createdAt] = createdAt
-        it[DebtsTable.place] = place
         it[DebtsTable.status] = status
     }
 
-    private fun insertRetake(type: String, admission: String?, startAt: Long, endAt: Long): EntityID<Long> =
+    private fun insertRetake(type: String, place: String, admission: String?, startAt: Long, endAt: Long): EntityID<Long> =
         RetakesTable.insertAndGetId {
             it[RetakesTable.type] = type
+            it[RetakesTable.place] = place
             it[RetakesTable.admission] = admission
             it[RetakesTable.startAt] = startAt
             it[RetakesTable.endAt] = endAt
+            it[RetakesTable.lastModified] = Instant.now().toEpochMilli()
         }
 
     private fun linkRetakeTeacher(retakeId: EntityID<Long>, teacherId: EntityID<Long>) {

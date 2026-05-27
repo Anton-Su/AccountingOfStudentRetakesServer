@@ -1,5 +1,6 @@
 package data.repository
 
+import data.databases.CommentsTable
 import data.databases.DebtsTable
 import data.databases.GradesTable
 import data.databases.RetakeEnrollmentsTable
@@ -7,6 +8,7 @@ import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
 import data.databases.SubjectStudentsTable
 import data.databases.SubjectsTable
+import domain.model.Comment
 import domain.model.Debt
 import domain.model.DebtStatus
 import domain.model.Grade
@@ -127,6 +129,31 @@ class StudentRepositoryImpl : StudentRepository {
         updatedEnrollment
     }
 
+    override suspend fun createComment(
+        studentId: Long,
+        gradeplace: Int,
+        gradeteacher: Int,
+        gradeoverall: Int,
+        comment: String?,
+        retakeId: Long,
+    ): Comment = transaction {
+        Comment(id = CommentsTable.insertAndGetId {
+                it[CommentsTable.studentId] = studentId
+                it[CommentsTable.gradeplace] = gradeplace
+                it[CommentsTable.gradeteacher] = gradeteacher
+                it[CommentsTable.gradeoverall] = gradeoverall
+                it[CommentsTable.comment] = comment
+                it[CommentsTable.retakeId] = retakeId
+            }.value,
+            studentId = studentId,
+            gradeplace = gradeplace,
+            gradeteacher = gradeteacher,
+            gradeoverall = gradeoverall,
+            comment = comment,
+            retakeId = retakeId
+        )
+    }
+
     private fun requireOwnedDebtInternal(studentId: Long, debtId: Long): Debt =
         DebtsTable.selectAll()
             .firstOrNull { row -> row[DebtsTable.id].value == debtId && row[DebtsTable.studentId].value == studentId }
@@ -154,7 +181,6 @@ class StudentRepositoryImpl : StudentRepository {
         studentId = this[DebtsTable.studentId].value,
         subjectId = this[DebtsTable.subjectId].value,
         teacherId = this[DebtsTable.teacherId].value,
-        place = this[DebtsTable.place],
         createdAt = this[DebtsTable.createdAt],
         status = this[DebtsTable.status]
     )
@@ -172,9 +198,11 @@ class StudentRepositoryImpl : StudentRepository {
         return Retake(
             id = retakeId,
             type = this[RetakesTable.type],
+            place = this[RetakesTable.place],
             admission = this[RetakesTable.admission],
             startAt = Instant.ofEpochMilli(this[RetakesTable.startAt]),
             endAt = Instant.ofEpochMilli(this[RetakesTable.endAt]),
+            lastModified = Instant.ofEpochMilli(this[RetakesTable.lastModified]),
             teacherIds = teacherIds
         )
     }

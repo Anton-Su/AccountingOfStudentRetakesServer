@@ -1,6 +1,7 @@
 package domain.repository
 
 import domain.model.Debt
+import domain.model.Comment
 import domain.model.Retake
 import domain.model.RetakeEnrollment
 import domain.model.Subject
@@ -15,5 +16,6 @@ interface StudentRepository {
     suspend fun findRetakesByTeacherId(teacherId: Long): List<Retake>
     suspend fun findEnrollmentsByRetakeId(retakeId: Long): List<RetakeEnrollment>
     suspend fun gradeStudent(retakeId: Long, studentId: Long, score: Int): RetakeEnrollment
+    suspend fun createComment(studentId: Long, gradeplace: Int, gradeteacher: Int, gradeoverall: Int, comment: String?, retakeId: Long): Comment
 }
 

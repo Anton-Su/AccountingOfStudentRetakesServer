@@ -10,6 +10,8 @@ data class CreateRetakeResponseDto(
 	val endAt: String,
 	val teacherIds: List<Long>,
 	val type: String,
+	val place: String,
+	val lastModified: String,
 	val admission: String?
 )
 
@@ -20,5 +22,7 @@ fun Retake.toCreateRetakeResponseDto() = CreateRetakeResponseDto(
 	endAt = this.endAt.toString(),
 	teacherIds = this.teacherIds,
 	type = this.type,
+	place = this.place,
+	lastModified = this.lastModified.toString(),
 	admission = this.admission
 )

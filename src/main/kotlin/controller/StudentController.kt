@@ -4,15 +4,18 @@ import data.dto.*
 import domain.model.UserRole
 import domain.repository.UserRepository
 import domain.usecases.CancelRetakeEnrollmentUseCase
+import domain.usecases.CreateCommentUseCase
 import domain.usecases.EnrollToRetakeUseCase
 import domain.usecases.GetStudentDebtsUseCase
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import security.currentEmail
@@ -22,7 +25,8 @@ class StudentController(
     private val userRepository: UserRepository,
     private val getStudentDebtsUseCase: GetStudentDebtsUseCase,
     private val enrollToRetakeUseCase: EnrollToRetakeUseCase,
-    private val cancelRetakeEnrollmentUseCase: CancelRetakeEnrollmentUseCase
+    private val cancelRetakeEnrollmentUseCase: CancelRetakeEnrollmentUseCase,
+    private val createCommentUseCase: CreateCommentUseCase
 ) {
     fun configure(application: Application) {
         application.routing {
@@ -63,6 +67,29 @@ class StudentController(
                         return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
                     }
                     call.respond(updated.toDto())
+                }
+                post("api/student/{studentId}/comments") {
+                    call.requireRole(UserRole.STUDENT)
+                    val studentId = call.pathStudentId() ?: return@post
+                    if (!call.requireOwnStudent(studentId)) return@post
+                    val request = try {
+                        call.receive<CreateCommentRequestDto>()
+                    } catch (_: Exception) {
+                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid request body"))
+                    }
+                    val created = try {
+                        createCommentUseCase(
+                            studentId = studentId,
+                            gradeplace = request.gradeplace,
+                            gradeteacher = request.gradeteacher,
+                            gradeoverall = request.gradeoverall,
+                            comment = request.comment,
+                            retakeId = request.retakeId,
+                        )
+                    } catch (e: IllegalArgumentException) {
+                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Bad request")))
+                    }
+                    call.respond(HttpStatusCode.Created, created.toDto())
                 }
             }
         }

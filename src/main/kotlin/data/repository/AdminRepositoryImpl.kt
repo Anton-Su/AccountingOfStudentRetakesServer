@@ -31,13 +31,16 @@ class AdminRepositoryImpl : AdminRepository {
         }
     }
 
-    override suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, admission: String?): Retake = transaction {
+    override suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?): Retake = transaction {
         val normalizedTeacherIds = teacherIds.distinct()
+        val now = Instant.now().toEpochMilli()
         val retakeId = RetakesTable.insertAndGetId {
             it[RetakesTable.type] = type
+            it[RetakesTable.place] = place
             it[RetakesTable.admission] = admission
             it[RetakesTable.startAt] = startAt.toEpochMilli()
             it[RetakesTable.endAt] = endAt.toEpochMilli()
+            it[RetakesTable.lastModified] = now
         }.value
         normalizedTeacherIds.forEach { teacherId ->
             RetakeTeachersTable.insert {
@@ -48,12 +51,15 @@ class AdminRepositoryImpl : AdminRepository {
         loadRetake(retakeId)
     }
 
-    override suspend fun updateRetake(id: Long, startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, admission: String?): Retake = transaction {
+    override suspend fun updateRetake(id: Long, startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?): Retake = transaction {
+        val now = Instant.now().toEpochMilli()
         val updatedRows = RetakesTable.update({ RetakesTable.id eq id }) {
             it[RetakesTable.type] = type
+            it[RetakesTable.place] = place
             it[RetakesTable.admission] = admission
             it[RetakesTable.startAt] = startAt.toEpochMilli()
             it[RetakesTable.endAt] = endAt.toEpochMilli()
+            it[RetakesTable.lastModified] = now
         }
         if (updatedRows == 0) throw IllegalArgumentException("Retake with id $id not found")
         RetakeTeachersTable.deleteWhere { RetakeTeachersTable.retakeId eq id }
@@ -77,9 +83,11 @@ class AdminRepositoryImpl : AdminRepository {
     private fun ResultRow.toRetake(teacherIds: List<Long>): Retake = Retake(
         id = this[RetakesTable.id].value,
         type = this[RetakesTable.type],
+        place = this[RetakesTable.place],
         admission = this[RetakesTable.admission],
         startAt = Instant.ofEpochMilli(this[RetakesTable.startAt]),
         endAt = Instant.ofEpochMilli(this[RetakesTable.endAt]),
+        lastModified = Instant.ofEpochMilli(this[RetakesTable.lastModified]),
         teacherIds = teacherIds
     )
 }
