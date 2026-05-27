@@ -4,6 +4,7 @@ val logback_version: String by project
 plugins {
     kotlin("jvm") version "2.3.0"
     id("io.ktor.plugin") version "3.4.0"
+    kotlin("plugin.serialization") version "2.2.10"
 }
 
 group = "com.example"
@@ -23,7 +24,8 @@ dependencies {
     implementation("io.ktor:ktor-server-call-logging-jvm")
     implementation("io.ktor:ktor-server-status-pages-jvm")
     implementation("io.ktor:ktor-server-cors-jvm")
-
+    implementation("io.ktor:ktor-server-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
     // Exposed + PostgreSQL
     implementation("org.jetbrains.exposed:exposed-core:0.55.0")
     implementation("org.jetbrains.exposed:exposed-dao:0.55.0")

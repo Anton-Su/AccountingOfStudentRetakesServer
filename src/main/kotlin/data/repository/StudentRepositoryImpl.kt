@@ -89,7 +89,6 @@ class StudentRepositoryImpl : StudentRepository {
     }
 
     override suspend fun gradeStudent(retakeId: Long, studentId: Long, score: Int): RetakeEnrollment = transaction {
-        require(score in 0..100) { "Score must be between 0 and 100" }
         val enrollmentRow = RetakeEnrollmentsTable.selectAll()
             .firstOrNull { row ->
                 row[RetakeEnrollmentsTable.retakeId].value == retakeId &&
@@ -112,9 +111,10 @@ class StudentRepositoryImpl : StudentRepository {
             gradedAt = now,
             status = "accepted"
         )
-        val debt = DebtsTable.selectAll()
-            .first { it[DebtsTable.id].value == updatedEnrollment.debtId }
+        val debt = DebtsTable.selectAll().first {
+            it[DebtsTable.id].value == updatedEnrollment.debtId }
         val subjectId = debt[DebtsTable.subjectId].value
+        // заменить на update
         SubjectStudentsTable.deleteWhere {
             (SubjectStudentsTable.studentId eq studentId) and
                 (SubjectStudentsTable.subjectId eq subjectId)
