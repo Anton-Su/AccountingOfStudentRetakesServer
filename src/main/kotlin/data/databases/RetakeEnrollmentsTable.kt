@@ -3,10 +3,11 @@ package data.databases
 import org.jetbrains.exposed.dao.id.LongIdTable
 
 object RetakeEnrollmentsTable : LongIdTable("retake_enrollments") {
+    val studentSubjectId = reference("student_subject_id", StudentSubjectsTable)
     val retakeId = reference("retake_id", RetakesTable)
-    val studentId = reference("student_id", StudentsTable.userId)
-    val debtId = reference("debt_id", DebtsTable).uniqueIndex()
+    val enrolledAt = long("enrolled_at")
+
     init {
-        uniqueIndex(retakeId, studentId, debtId)
+        uniqueIndex(studentSubjectId, retakeId)
     }
 }

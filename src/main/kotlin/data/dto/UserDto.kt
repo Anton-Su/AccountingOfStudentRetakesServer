@@ -1,6 +1,5 @@
 package data.dto
 
-import domain.model.Retake
 import domain.model.User
 import domain.model.UserRole
 import kotlinx.serialization.Serializable

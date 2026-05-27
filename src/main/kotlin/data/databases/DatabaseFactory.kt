@@ -29,12 +29,12 @@ object DatabaseFactory {
                 TeachersTable,
                 TeacherDisciplinesTable,
                 SubjectsTable,
+                StudentSubjectsTable,
                 DebtsTable,
                 RetakesTable,
                 RetakeTeachersTable,
                 RetakeEnrollmentsTable,
                 GradesTable,
-                SubjectStudentsTable,
                 CommentsTable
             )
             DatabaseSeeder.seed()

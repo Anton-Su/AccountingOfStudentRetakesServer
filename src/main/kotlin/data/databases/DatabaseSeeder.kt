@@ -1,11 +1,13 @@
 package data.databases
 
 import domain.model.DebtStatus
+import domain.model.StudentSubjectStatus
 import domain.model.UserRole
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import security.PasswordHasher
 import java.time.Instant
 
@@ -73,16 +75,37 @@ object DatabaseSeeder {
             insertSubject("Мобильная разработка")
         val statehoodSubjectId =
             insertSubject("Основы российской государственности")
-        val configDebtId = insertDebt(
+
+        val configStudentSubjectId = insertStudentSubject(
             studentId = studentId,
             subjectId = configManagementSubjectId,
+            status = StudentSubjectStatus.DEBT,
+            finalScore = null,
+            updatedAt = 1_715_500_000_000
+        )
+        insertStudentSubject(
+            studentId = studentId,
+            subjectId = mobileDevSubjectId,
+            status = StudentSubjectStatus.OK,
+            finalScore = 4,
+            updatedAt = 1_715_400_000_000
+        )
+        val statehoodStudentSubjectId = insertStudentSubject(
+            studentId = studentId,
+            subjectId = statehoodSubjectId,
+            status = StudentSubjectStatus.DEBT,
+            finalScore = null,
+            updatedAt = 1_715_586_400_000
+        )
+
+        val configDebtId = insertDebt(
+            studentSubjectId = configStudentSubjectId,
             teacherId = teacher1Id,
             createdAt = 1_715_500_000_000,
             status = DebtStatus.ACTIVE
         )
         insertDebt(
-            studentId = studentId,
-            subjectId = statehoodSubjectId,
+            studentSubjectId = statehoodStudentSubjectId,
             teacherId = teacher2Id,
             createdAt = 1_715_586_400_000,
             status = DebtStatus.ACTIVE
@@ -98,22 +121,19 @@ object DatabaseSeeder {
         linkRetakeTeacher(retakeId, teacher2Id)
         insertEnrollment(
             retakeId = retakeId,
-            studentId = studentId,
-            debtId = configDebtId
+            studentSubjectId = configStudentSubjectId
         )
         val gradedAt = 1_716_000_100_000
         insertGrade(
             retakeId = retakeId,
-            studentId = studentId,
-            score = 85,
+            studentSubjectId = configStudentSubjectId,
+            score = 4,
             gradedAt = gradedAt
         )
-        insertSubjectStudent(
-            studentId = studentId,
-            subjectId = configManagementSubjectId,
-            retakeId = retakeId,
-            score = 85,
-            gradedAt = gradedAt
+        updateStudentSubjectAfterGrade(
+            studentSubjectId = configStudentSubjectId,
+            score = 5,
+            updatedAt = gradedAt
         )
     }
 
@@ -162,17 +182,29 @@ object DatabaseSeeder {
     }
 
     private fun insertDebt(
-        studentId: EntityID<Long>,
-        subjectId: EntityID<Long>,
+        studentSubjectId: EntityID<Long>,
         teacherId: EntityID<Long>,
         createdAt: Long,
         status: DebtStatus
     ): EntityID<Long> = DebtsTable.insertAndGetId {
-        it[DebtsTable.studentId] = studentId
-        it[DebtsTable.subjectId] = subjectId
+        it[DebtsTable.studentSubjectId] = studentSubjectId
         it[DebtsTable.teacherId] = teacherId
         it[DebtsTable.createdAt] = createdAt
         it[DebtsTable.status] = status
+    }
+
+    private fun insertStudentSubject(
+        studentId: EntityID<Long>,
+        subjectId: EntityID<Long>,
+        status: StudentSubjectStatus,
+        finalScore: Int?,
+        updatedAt: Long
+    ): EntityID<Long> = StudentSubjectsTable.insertAndGetId {
+        it[StudentSubjectsTable.studentId] = studentId
+        it[StudentSubjectsTable.subjectId] = subjectId
+        it[StudentSubjectsTable.status] = status
+        it[StudentSubjectsTable.score] = finalScore
+        it[StudentSubjectsTable.updatedAt] = updatedAt
     }
 
     private fun insertRetake(type: String, place: String, admission: String?, startAt: Long, endAt: Long): EntityID<Long> =
@@ -192,36 +224,27 @@ object DatabaseSeeder {
         }
     }
 
-    private fun insertEnrollment(retakeId: EntityID<Long>, studentId: EntityID<Long>, debtId: EntityID<Long>): EntityID<Long> =
+    private fun insertEnrollment(retakeId: EntityID<Long>, studentSubjectId: EntityID<Long>): EntityID<Long> =
         RetakeEnrollmentsTable.insertAndGetId {
             it[RetakeEnrollmentsTable.retakeId] = retakeId
-            it[RetakeEnrollmentsTable.studentId] = studentId
-            it[RetakeEnrollmentsTable.debtId] = debtId
+            it[RetakeEnrollmentsTable.studentSubjectId] = studentSubjectId
+            it[RetakeEnrollmentsTable.enrolledAt] = Instant.now().toEpochMilli()
         }
 
-    private fun insertGrade(retakeId: EntityID<Long>, studentId: EntityID<Long>, score: Int, gradedAt: Long) {
+    private fun insertGrade(retakeId: EntityID<Long>, studentSubjectId: EntityID<Long>, score: Int, gradedAt: Long) {
         GradesTable.insert {
             it[GradesTable.retakeId] = retakeId
-            it[GradesTable.studentId] = studentId
+            it[GradesTable.studentSubjectId] = studentSubjectId
             it[GradesTable.score] = score
             it[GradesTable.gradedAt] = gradedAt
-            it[GradesTable.status] = "accepted"
         }
     }
 
-    private fun insertSubjectStudent(
-        studentId: EntityID<Long>,
-        subjectId: EntityID<Long>,
-        retakeId: EntityID<Long>,
-        score: Int,
-        gradedAt: Long
-    ) {
-        SubjectStudentsTable.insert {
-            it[SubjectStudentsTable.studentId] = studentId
-            it[SubjectStudentsTable.subjectId] = subjectId
-            it[SubjectStudentsTable.retakeId] = retakeId
-            it[SubjectStudentsTable.score] = score
-            it[SubjectStudentsTable.gradedAt] = gradedAt
+    private fun updateStudentSubjectAfterGrade(studentSubjectId: EntityID<Long>, score: Int, updatedAt: Long) {
+        StudentSubjectsTable.update({ StudentSubjectsTable.id eq studentSubjectId }) {
+            it[StudentSubjectsTable.score] = score
+            it[StudentSubjectsTable.status] = StudentSubjectStatus.PASSED
+            it[StudentSubjectsTable.updatedAt] = updatedAt
         }
     }
 }
