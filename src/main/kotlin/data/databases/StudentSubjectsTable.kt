@@ -7,7 +7,7 @@ object StudentSubjectsTable : LongIdTable("student_subjects") {
     val studentId = reference("student_id", StudentsTable.userId)
     val subjectId = reference("subject_id", SubjectsTable)
     val status = enumerationByName("status", 32, StudentSubjectStatus::class)
-    val score = integer("final_score").nullable()
+    val score = integer("score").nullable()
     val updatedAt = long("updated_at")
     init {
         uniqueIndex(studentId, subjectId)

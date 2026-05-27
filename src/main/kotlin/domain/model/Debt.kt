@@ -8,3 +8,6 @@ data class Debt(
     val createdAt: Long,
     val status: DebtStatus
 )
+
+
+

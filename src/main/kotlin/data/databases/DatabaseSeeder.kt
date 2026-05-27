@@ -80,21 +80,21 @@ object DatabaseSeeder {
             studentId = studentId,
             subjectId = configManagementSubjectId,
             status = StudentSubjectStatus.DEBT,
-            finalScore = null,
+            score = null,
             updatedAt = 1_715_500_000_000
         )
         insertStudentSubject(
             studentId = studentId,
             subjectId = mobileDevSubjectId,
             status = StudentSubjectStatus.OK,
-            finalScore = 4,
+            score = 4,
             updatedAt = 1_715_400_000_000
         )
         val statehoodStudentSubjectId = insertStudentSubject(
             studentId = studentId,
             subjectId = statehoodSubjectId,
             status = StudentSubjectStatus.DEBT,
-            finalScore = null,
+            score = null,
             updatedAt = 1_715_586_400_000
         )
 
@@ -197,13 +197,13 @@ object DatabaseSeeder {
         studentId: EntityID<Long>,
         subjectId: EntityID<Long>,
         status: StudentSubjectStatus,
-        finalScore: Int?,
+        score: Int?,
         updatedAt: Long
     ): EntityID<Long> = StudentSubjectsTable.insertAndGetId {
         it[StudentSubjectsTable.studentId] = studentId
         it[StudentSubjectsTable.subjectId] = subjectId
         it[StudentSubjectsTable.status] = status
-        it[StudentSubjectsTable.score] = finalScore
+        it[StudentSubjectsTable.score] = score
         it[StudentSubjectsTable.updatedAt] = updatedAt
     }
 
