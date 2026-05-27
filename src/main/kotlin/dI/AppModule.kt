@@ -4,6 +4,7 @@ package dI
 import security.PasswordHasher
 import controller.AdminController
 import controller.AuthController
+import controller.UserController
 import controller.StudentController
 import controller.TeacherController
 import data.repository.AdminRepositoryImpl
@@ -42,6 +43,7 @@ object AppContainer {
     val createRetakeUseCase: CreateRetakeUseCase by lazy { CreateRetakeUseCase(adminRepository) }
     val redactRetakeUseCase: RedactRetakeUseCase by lazy { RedactRetakeUseCase(adminRepository) }
     val authController: AuthController by lazy { AuthController(loginUseCase) }
+    val userController: UserController by lazy { UserController(userRepository) }
     val studentController: StudentController by lazy {
         StudentController(
             userRepository,

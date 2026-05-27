@@ -14,4 +14,3 @@ fun ApplicationCall.requireRole(vararg allowedRoles: UserRole): UserRole {
         throw ForbiddenException("Insufficient permissions for this resource")
     return role
 }
-

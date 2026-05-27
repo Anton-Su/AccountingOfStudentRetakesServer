@@ -3,8 +3,11 @@ package data.repository
 import data.databases.UsersTable
 import domain.model.User
 import domain.repository.UserRepository
+import io.ktor.server.application.ApplicationCall
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import security.currentEmail
 
 class UserRepositoryImpl : UserRepository {
     override suspend fun findByEmail(email: String): User? {
@@ -25,7 +28,12 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
-    private fun org.jetbrains.exposed.sql.ResultRow.toUser(): User = User(
+    override suspend fun getUser(call: ApplicationCall): User? {
+        val email = call.currentEmail() ?: return null
+        return findByEmail(email)
+    }
+
+    private fun ResultRow.toUser(): User = User(
         id = this[UsersTable.id].value,
         role = this[UsersTable.role],
         firstName = this[UsersTable.firstName],

@@ -14,27 +14,16 @@ fun Application.configureRouting() {
         get("/") {
             call.respondText("This is a start page!")
         }
-//        authenticate("auth-jwt") {
-//            get("/api/me") {
-//                val role = call.requireRole(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
-//                val email = call.currentEmail() ?: "unknown"
-//                call.respondText("Authenticated as $email with role $role")
-//            }
-//            get("/api/admin") {
-//                call.requireRole(UserRole.ADMIN)
-//                call.respondText("Admin resource")
-//            }
-//            get("/api/teacher") {
-//                call.requireRole(UserRole.ADMIN, UserRole.TEACHER)
-//                call.respondText("Teacher resource")
-//            }
-//            get("/api/student") {
-//                call.requireRole(UserRole.STUDENT)
-//                call.respondText("Student resource")
-//            }
-//        }
+        authenticate("auth-jwt") {
+            get("/api/me") {
+                val role = call.requireRole(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
+                val email = call.currentEmail() ?: "unknown"
+                call.respondText("Authenticated as $email with role $role")
+            }
+        }
     }
     AppContainer.authController.configure(this)
+    AppContainer.userController.configure(this)
     AppContainer.studentController.configure(this)
     AppContainer.adminController.configure(this)
     AppContainer.teacherController.configure(this)
