@@ -3,6 +3,7 @@ package controller
 import data.dto.*
 import domain.model.UserRole
 import domain.usecases.CreateRetakeUseCase
+import domain.usecases.GetAllCommentsUseCase
 import domain.usecases.GetSubjectsUseCase
 import domain.usecases.GetTeachersByDisciplineUseCase
 import domain.usecases.RedactRetakeUseCase
@@ -21,7 +22,8 @@ class AdminController(
     private val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase,
     private val getSubjectsUseCase: GetSubjectsUseCase,
     private val createRetakeUseCase: CreateRetakeUseCase,
-    private val redactRetakeUseCase: RedactRetakeUseCase
+    private val redactRetakeUseCase: RedactRetakeUseCase,
+    private val getAllCommentsUseCase: GetAllCommentsUseCase
 ) {
     fun configure(application: Application) {
         application.routing {
@@ -48,6 +50,7 @@ class AdminController(
                             startAtIso = request.startAt,
                             endAtIso = request.endAt,
                             teacherIds = request.teacherIds,
+                            subjectId = request.subjectId,
                             type = request.type,
                             place = request.place,
                             admission = request.admission
@@ -69,9 +72,15 @@ class AdminController(
                         teacherIds = request.teacherIds,
                         type = request.type,
                         place = request.place,
-                        admission = request.admission
+                        admission = request.admission,
+                        subjectId = request.subjectId,
                     )
                     call.respond(HttpStatusCode.OK, updated.toCreateRetakeResponseDto())
+                }
+                get("api/admin/comments") {
+                    call.requireRole(UserRole.ADMIN)
+                    val comments = getAllCommentsUseCase()
+                    call.respond(comments.map { it.toDto() })
                 }
             }
         }

@@ -63,15 +63,15 @@ object DatabaseSeeder {
         val daniilConfigId = insertStudentSubject( studentId = student5Id, subjectId = configSubjectId, status = StudentSubjectStatus.DEBT, score = null, updatedAt = 1_717_100_000_000 )
         val daniilOperationsId = insertStudentSubject( studentId = student5Id, subjectId = operationsSubjectId, status = StudentSubjectStatus.DEBT, score = null, updatedAt = 1_717_200_000_000 )
 
-        val retake1Id = insertRetake( type = "Экзамен", place = "Ауд. 101", admission = "40 баллов допуска", startAt = 1_716_000_000_000, endAt = 1_716_086_400_000 )
-        val retake2Id = insertRetake( type = "Экзамен", place = "Ауд. 404", admission = "20 баллов допуска", startAt = 1_720_000_000_000, endAt = 1_720_086_400_000 )
-        val retake3Id = insertRetake( type = "Зачет", place = "Ауд. 212", admission = "Лабораторные должны быть сданы", startAt = 1_721_000_000_000, endAt = 1_721_050_000_000 )
-        val retake4Id = insertRetake( type = "Экзамен", place = "Ауд. 505", admission = "Минимум 30 баллов", startAt = 1_722_000_000_000, endAt = 1_722_086_400_000 )
+        val retake1Id = insertRetake( type = "Экзамен", place = "Ауд. 101", admission = "40 баллов допуска", startAt = 1_716_000_000_000, endAt = 1_716_086_400_000, statehoodSubjectId.value )
+        val retake2Id = insertRetake( type = "Экзамен", place = "Ауд. 404", admission = "20 баллов допуска", startAt = 1_720_000_000_000, endAt = 1_720_086_400_000, configSubjectId.value )
+        val retake3Id = insertRetake( type = "Зачет", place = "Ауд. 212", admission = "Лабораторные должны быть сданы", startAt = 1_721_000_000_000, endAt = 1_721_050_000_000, operationsSubjectId.value )
+        val retake4Id = insertRetake( type = "Экзамен", place = "Ауд. 505", admission = "Минимум 30 баллов", startAt = 1_722_000_000_000, endAt = 1_722_086_400_000, dbSubjectId.value )
 
-        linkRetakeTeacher(retake1Id, teacher2Id.value)
-        linkRetakeTeacher(retake2Id, teacher1Id.value)
-        linkRetakeTeacher(retake3Id, teacher3Id.value)
-        linkRetakeTeacher(retake4Id, teacher4Id.value)
+        linkRetakeTeacher(retake1Id, teacher2Id)
+        linkRetakeTeacher(retake2Id, teacher1Id)
+        linkRetakeTeacher(retake3Id, teacher3Id)
+        linkRetakeTeacher(retake4Id, teacher4Id)
 
         insertEnrollment( retakeId = retake1Id, studentSubjectId = maximConfigId )
         insertEnrollment( retakeId = retake2Id, studentSubjectId = maximStatehoodId )
@@ -117,14 +117,14 @@ object DatabaseSeeder {
 
     private fun insertStudentProfile(userId: EntityID<Long>, groupName: String) {
         StudentsTable.insert {
-            it[StudentsTable.userId] = userId
+            it[StudentsTable.id] = userId
             it[StudentsTable.groupName] = groupName
         }
     }
 
     private fun insertTeacherProfile(userId: EntityID<Long>) {
         TeachersTable.insert {
-            it[TeachersTable.userId] = userId
+            it[TeachersTable.id] = userId
         }
     }
 
@@ -154,17 +154,18 @@ object DatabaseSeeder {
             it[StudentSubjectsTable.updatedAt] = updatedAt
         }
 
-    private fun insertRetake(type: String, place: String, admission: String?, startAt: Long, endAt: Long): EntityID<Long> =
+    private fun insertRetake(type: String, place: String, admission: String?, startAt: Long, endAt: Long, subjectId: Long): EntityID<Long> =
         RetakesTable.insertAndGetId {
             it[RetakesTable.type] = type
             it[RetakesTable.place] = place
+            it[RetakesTable.subjectId] = subjectId
             it[RetakesTable.admission] = admission
             it[RetakesTable.startAt] = startAt
             it[RetakesTable.endAt] = endAt
             it[RetakesTable.lastModified] = Instant.now().toEpochMilli()
         }
 
-    private fun linkRetakeTeacher(retakeId: EntityID<Long>, teacherId: Long) {
+    private fun linkRetakeTeacher(retakeId: EntityID<Long>, teacherId: EntityID<Long>) {
         RetakeTeachersTable.insert {
             it[RetakeTeachersTable.retakeId] = retakeId
             it[RetakeTeachersTable.teacherId] = teacherId

@@ -21,6 +21,7 @@ import domain.usecases.GetRetakeDetailsUseCase
 import domain.usecases.GetTeacherRetakesUseCase
 import domain.usecases.GetStudentDebtsUseCase
 import domain.usecases.CreateCommentUseCase
+import domain.usecases.GetAllCommentsUseCase
 import domain.usecases.GetStudentDebtRankUseCase
 import domain.usecases.RedactRetakeUseCase
 import domain.usecases.GetSubjectsUseCase
@@ -40,6 +41,7 @@ object AppContainer {
     val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase by lazy {
         GetTeachersByDisciplineUseCase(adminRepository)
     }
+    val getAllCommentsUseCase: GetAllCommentsUseCase by lazy {GetAllCommentsUseCase(adminRepository)}
     val getSubjectsUseCase: GetSubjectsUseCase by lazy { GetSubjectsUseCase(adminRepository) }
     val getTeacherRetakesUseCase: GetTeacherRetakesUseCase by lazy { GetTeacherRetakesUseCase(studentRepository) }
     val getRetakeDetailsUseCase: GetRetakeDetailsUseCase by lazy { GetRetakeDetailsUseCase(studentRepository) }
@@ -49,17 +51,10 @@ object AppContainer {
     val authController: AuthController by lazy { AuthController(loginUseCase) }
     val userController: UserController by lazy { UserController(userRepository) }
     val studentController: StudentController by lazy {
-        StudentController(
-            userRepository,
-            getStudentDebtsUseCase,
-            enrollToRetakeUseCase,
-            cancelRetakeEnrollmentUseCase,
-            createCommentUseCase,
-            getStudentDebtRankUseCase
-        )
+        StudentController(userRepository, getStudentDebtsUseCase, enrollToRetakeUseCase, cancelRetakeEnrollmentUseCase, createCommentUseCase, getStudentDebtRankUseCase)
     }
     val adminController: AdminController by lazy {
-        AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase)
+        AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase)
     }
     val teacherController: TeacherController by lazy {
         TeacherController(userRepository, studentRepository, getTeacherRetakesUseCase, getRetakeDetailsUseCase, gradeStudentUseCase)

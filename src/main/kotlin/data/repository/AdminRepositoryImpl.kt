@@ -1,9 +1,11 @@
 package data.repository
 
+import data.databases.CommentsTable
 import data.databases.TeacherDisciplinesTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
 import data.databases.SubjectsTable
+import domain.model.Comment
 import domain.model.Retake
 import domain.model.Subject
 import domain.model.Teacher
@@ -43,12 +45,14 @@ class AdminRepositoryImpl : AdminRepository {
             }
     }
 
-    override suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?): Retake = transaction {
+
+    override suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?, subjectId: Long): Retake = transaction {
         val normalizedTeacherIds = teacherIds.distinct()
         val now = Instant.now().toEpochMilli()
         val retakeId = RetakesTable.insertAndGetId {
             it[RetakesTable.type] = type
             it[RetakesTable.place] = place
+            it[RetakesTable.subjectId] = subjectId
             it[RetakesTable.admission] = admission
             it[RetakesTable.startAt] = startAt.toEpochMilli()
             it[RetakesTable.endAt] = endAt.toEpochMilli()
@@ -63,11 +67,12 @@ class AdminRepositoryImpl : AdminRepository {
         loadRetake(retakeId)
     }
 
-    override suspend fun updateRetake(id: Long, startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?): Retake = transaction {
+    override suspend fun updateRetake(id: Long, startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?, subjectId: Long): Retake = transaction {
         val now = Instant.now().toEpochMilli()
         val updatedRows = RetakesTable.update({ RetakesTable.id eq id }) {
             it[RetakesTable.type] = type
             it[RetakesTable.place] = place
+            it[RetakesTable.subjectId] = subjectId
             it[RetakesTable.admission] = admission
             it[RetakesTable.startAt] = startAt.toEpochMilli()
             it[RetakesTable.endAt] = endAt.toEpochMilli()
@@ -84,11 +89,25 @@ class AdminRepositoryImpl : AdminRepository {
         loadRetake(id)
     }
 
+    override suspend fun getAllComments(): List<Comment> = transaction {
+        CommentsTable.selectAll().map {
+            Comment(
+                id = it[CommentsTable.id].value,
+                studentId = it[CommentsTable.studentId].value,
+                gradeplace = it[CommentsTable.gradeplace],
+                gradeteacher = it[CommentsTable.gradeteacher],
+                gradeoverall = it[CommentsTable.gradeoverall],
+                comment = it[CommentsTable.comment],
+                retakeId = it[CommentsTable.retakeId].value
+            )
+        }
+    }
+
     private fun loadRetake(retakeId: Long): Retake {
         val row = RetakesTable.selectAll().first { it[RetakesTable.id].value == retakeId }
         val teacherIds = RetakeTeachersTable.selectAll()
             .filter { it[RetakeTeachersTable.retakeId].value == retakeId }
-            .map { it[RetakeTeachersTable.teacherId] } // <- .value убрать
+            .map { it[RetakeTeachersTable.teacherId].value } // .value вернуть
         return row.toRetake(teacherIds)
     }
 
@@ -96,6 +115,7 @@ class AdminRepositoryImpl : AdminRepository {
         id = this[RetakesTable.id].value,
         type = this[RetakesTable.type],
         place = this[RetakesTable.place],
+        subjectId = this[RetakesTable.subjectId].value,
         admission = this[RetakesTable.admission],
         startAt = Instant.ofEpochMilli(this[RetakesTable.startAt]),
         endAt = Instant.ofEpochMilli(this[RetakesTable.endAt]),

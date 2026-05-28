@@ -11,6 +11,7 @@ class CreateRetakeUseCase(
         startAtIso: String,
         endAtIso: String,
         teacherIds: List<Long>,
+        subjectId: Long,
         type: String,
         place: String,
         admission: String?
@@ -25,7 +26,10 @@ class CreateRetakeUseCase(
         require(normalizedTeacherIds.isNotEmpty()) { "teacherIds must contain at least one positive id" }
         require(type.trim().isNotBlank()) { "type is required" }
         require(place.trim().isNotBlank()) { "place is required" }
-        return adminRepository.createRetake(startAt, endAt, normalizedTeacherIds, type.trim(), place.trim(), admission?.trim())
+        return adminRepository.createRetake(
+            startAt, endAt, normalizedTeacherIds, type.trim(), place.trim(), admission?.trim(),
+            subjectId = subjectId
+        )
     }
 
     private fun parseIsoInstant(value: String, fieldName: String): Instant {

@@ -7,6 +7,6 @@ data class Comment(
     val gradeteacher: Int,
     val gradeoverall: Int,
     val comment: String?,
-    val retakeId: Long?
+    val retakeId: Long
 )
 

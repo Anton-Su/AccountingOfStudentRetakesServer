@@ -10,7 +10,8 @@ data class CommentResponseDto(
     val gradeplace: Int,
     val gradeteacher: Int,
     val gradeoverall: Int,
-    val comment: String? = null
+    val comment: String? = null,
+    val retakeId: Long
 )
 
 fun Comment.toDto(): CommentResponseDto = CommentResponseDto(
@@ -19,5 +20,6 @@ fun Comment.toDto(): CommentResponseDto = CommentResponseDto(
     gradeplace = gradeplace,
     gradeteacher = gradeteacher,
     gradeoverall = gradeoverall,
-    comment = comment
+    comment = comment,
+    retakeId = retakeId
 )

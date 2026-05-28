@@ -60,8 +60,7 @@ class StudentController(
                     val studentId = call.pathStudentId() ?: return@post
                     if (!call.requireOwnStudent(studentId)) return@post
                     val request = call.receive<CreateCommentRequestDto>()
-                    val created =
-                        createCommentUseCase(
+                    val created = createCommentUseCase(
                             studentId = studentId,
                             gradeplace = request.gradeplace,
                             gradeteacher = request.gradeteacher,

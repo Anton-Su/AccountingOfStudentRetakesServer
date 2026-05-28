@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserDto(
+    val id: Long,
     val role: UserRole,
     val firstName: String,
     val secondName: String,
@@ -17,6 +18,7 @@ data class UserDto(
 
 
 fun User.toUserDto(): UserDto = UserDto(
+    id = this.id,
     role = this.role,
     firstName = this.firstName,
     secondName = this.secondName,

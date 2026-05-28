@@ -57,16 +57,18 @@ class StudentRepositoryImpl : StudentRepository {
             ?.toRetake()
     }
 
-    override suspend fun enrollToRetake(studentId: Long, subjectId: Long, retakeId: Long): Boolean = transaction {
+    override suspend fun enrollToRetake(studentId: Long, debtId: Long, retakeId: Long): Boolean = transaction {
         val studentSubject = StudentSubjectsTable
             .selectAll()
             .firstOrNull {
                 it[StudentSubjectsTable.studentId].value == studentId &&
-                        it[StudentSubjectsTable.subjectId].value == subjectId
+                        it[StudentSubjectsTable.subjectId].value == debtId
             } ?: throw IllegalArgumentException("Student subject not found")
         val studentSubjectId = studentSubject[StudentSubjectsTable.id].value
-        require(findRetakeByIdInternal(retakeId) != null) {
-            "Retake with id $retakeId not found"
+        val retake = findRetakeByIdInternal(retakeId)
+            ?: throw IllegalArgumentException("Retake with id $retakeId not found")
+        require(retake.subjectId == debtId) {
+            "Retake subject does not match debt subject"
         }
         RetakeEnrollmentsTable.deleteWhere {
             RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId
@@ -76,15 +78,17 @@ class StudentRepositoryImpl : StudentRepository {
             it[RetakeEnrollmentsTable.studentSubjectId] = studentSubjectId
             it[RetakeEnrollmentsTable.enrolledAt] = Instant.now().toEpochMilli()
         }
+
+
         true
     }
 
-    override suspend fun cancelRetakeEnrollment(studentId: Long, subjectId: Long, retakeId: Long): Boolean = transaction {
+    override suspend fun cancelRetakeEnrollment(studentId: Long, debtId: Long, retakeId: Long): Boolean = transaction {
         val studentSubject = StudentSubjectsTable
             .selectAll()
             .firstOrNull {
                 it[StudentSubjectsTable.studentId].value == studentId &&
-                        it[StudentSubjectsTable.subjectId].value == subjectId
+                        it[StudentSubjectsTable.subjectId].value == debtId
             } ?: throw IllegalArgumentException("Student subject not found")
         val studentSubjectId = studentSubject[StudentSubjectsTable.id].value
         val exists = RetakeEnrollmentsTable.selectAll().any {
@@ -103,7 +107,7 @@ class StudentRepositoryImpl : StudentRepository {
 
     override suspend fun findRetakesByTeacherId(teacherId: Long): List<Retake> = transaction {
         val retakeIds = RetakeTeachersTable.selectAll()
-            .filter { it[RetakeTeachersTable.teacherId] == teacherId }
+            .filter { it[RetakeTeachersTable.teacherId].value == teacherId }
             .map { it[RetakeTeachersTable.retakeId].value }
             .distinct()
         retakeIds.mapNotNull { findRetakeByIdInternal(it) }
@@ -190,13 +194,10 @@ class StudentRepositoryImpl : StudentRepository {
     }
 
     private fun findRetakeByIdInternal(retakeId: Long): Retake? =
-        RetakesTable.selectAll()
-            .firstOrNull { it[RetakesTable.id].value == retakeId }
-            ?.toRetake()
+        RetakesTable.selectAll().firstOrNull { it[RetakesTable.id].value == retakeId }?.toRetake()
 
     private fun findStudentSubjectRow(studentSubjectId: Long): ResultRow? =
-        StudentSubjectsTable.selectAll()
-            .firstOrNull { it[StudentSubjectsTable.id].value == studentSubjectId }
+        StudentSubjectsTable.selectAll().firstOrNull { it[StudentSubjectsTable.id].value == studentSubjectId }
 
 
     private fun ResultRow.toSubject(): Subject = Subject(
@@ -208,12 +209,13 @@ class StudentRepositoryImpl : StudentRepository {
         val retakeId = this[RetakesTable.id].value
         val teacherIds = RetakeTeachersTable.selectAll()
             .filter { it[RetakeTeachersTable.retakeId].value == retakeId }
-            .map { it[RetakeTeachersTable.teacherId]}
+            .map { it[RetakeTeachersTable.teacherId].value}
         return Retake(
             id = retakeId,
             type = this[RetakesTable.type],
             place = this[RetakesTable.place],
             admission = this[RetakesTable.admission],
+            subjectId = this[RetakesTable.subjectId].value,
             startAt = Instant.ofEpochMilli(this[RetakesTable.startAt]),
             endAt = Instant.ofEpochMilli(this[RetakesTable.endAt]),
             lastModified = Instant.ofEpochMilli(this[RetakesTable.lastModified]),

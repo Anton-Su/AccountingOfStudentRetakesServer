@@ -39,8 +39,8 @@ class TeacherController(
                         HttpStatusCode.Unauthorized,
                         mapOf("error" to "User not found")
                     )
-                    val teacherId = user.id.toInt()
-                    val retakes = getTeacherRetakesUseCase(teacherId.toLong())
+                    val teacherId = user.id
+                    val retakes = getTeacherRetakesUseCase(teacherId)
                     call.respond(retakes.map { it.toRetakeDetailDto() })
                 }
                 get("api/teacher/retake/{retakeId}") {
@@ -53,10 +53,10 @@ class TeacherController(
                         HttpStatusCode.Unauthorized,
                         mapOf("error" to "User not found")
                     )
-                    val teacherId = user.id.toInt()
+                    val teacherId = user.id
                     val retakeId = call.pathRetakeId() ?: return@get
                     val details = getRetakeDetailsUseCase(retakeId)
-                    if (!details.retake.teacherIds.contains(teacherId.toLong())) {
+                    if (!details.retake.teacherIds.contains(teacherId)) {
                         return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
                     }
                     call.respond(
@@ -76,7 +76,7 @@ class TeacherController(
                         HttpStatusCode.Unauthorized,
                         mapOf("error" to "User not found")
                     )
-                    val teacherId = user.id.toInt()
+                    val teacherId = user.id
                     val retakeId = call.pathRetakeId() ?: return@post
                     val studentId = call.pathStudentId() ?: return@post
                     val request = call.receive<GradeRequestDto>()
@@ -84,7 +84,7 @@ class TeacherController(
                         HttpStatusCode.NotFound,
                         mapOf("error" to "Retake not found")
                     )
-                    if (!retake.teacherIds.contains(teacherId.toLong())) {
+                    if (!retake.teacherIds.contains(teacherId)) {
                         return@post call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
                     }
                     val enrollment = gradeStudentUseCase(retakeId, studentId,        retake.type, request.score)
@@ -110,5 +110,3 @@ class TeacherController(
         }
     }
 }
-
-
