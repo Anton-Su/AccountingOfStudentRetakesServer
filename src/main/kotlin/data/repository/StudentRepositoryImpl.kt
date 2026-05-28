@@ -21,7 +21,6 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import java.time.Instant
 
 class StudentRepositoryImpl : StudentRepository {
@@ -100,54 +99,6 @@ class StudentRepositoryImpl : StudentRepository {
         }
         true
     }
-
-//    override suspend fun findRetakesByTeacherId(teacherId: Long): List<Retake> = transaction {
-//        val retakeIds = RetakeTeachersTable.selectAll()
-//            .filter { it[RetakeTeachersTable.teacherId].value == teacherId }
-//            .map { it[RetakeTeachersTable.retakeId].value }
-//            .distinct()
-//        retakeIds.mapNotNull { findRetakeByIdInternal(it) }
-//    }
-
-//    override suspend fun findEnrollmentsByRetakeId(retakeId: Long): List<RetakeEnrollment> = transaction {
-//        RetakeEnrollmentsTable.selectAll()
-//            .filter { it[RetakeEnrollmentsTable.retakeId].value == retakeId }
-//            .mapNotNull { it.toEnrollmentOrNull() }
-//    }
-
-//    override suspend fun gradeStudent(retakeId: Long, studentId: Long, score: Int): RetakeEnrollment = transaction {
-//        val enrollmentRow = RetakeEnrollmentsTable.selectAll()
-//            .firstOrNull { row ->
-//                if (row[RetakeEnrollmentsTable.retakeId].value != retakeId) return@firstOrNull false
-//                val ssRow = findStudentSubjectRow(
-//                    row[RetakeEnrollmentsTable.studentSubjectId].value
-//                ) ?: return@firstOrNull false
-//                ssRow[StudentSubjectsTable.studentId].value == studentId
-//            }
-//            ?: throw IllegalArgumentException(
-//                "Enrollment not found for retake $retakeId and student $studentId"
-//            )
-//        val studentSubjectId = enrollmentRow[RetakeEnrollmentsTable.studentSubjectId].value
-//        val now = Instant.now().toEpochMilli()
-//        GradesTable.insert {
-//            it[GradesTable.retakeId] = retakeId
-//            it[GradesTable.studentSubjectId] = studentSubjectId
-//            it[GradesTable.score] = score
-//            it[GradesTable.gradedAt] = now
-//        }
-//        val newStatus = if (score == 2) StudentSubjectStatus.DEBT else StudentSubjectStatus.PASSED
-//        StudentSubjectsTable.update({ StudentSubjectsTable.id eq studentSubjectId }) {
-//            it[status] = newStatus
-//            it[StudentSubjectsTable.score] = score
-//            it[updatedAt] = now
-//        }
-//        RetakeEnrollment(
-//            id = enrollmentRow[RetakeEnrollmentsTable.id].value,
-//            retakeId = retakeId,
-//            studentId = studentId,
-//            studentSubjectId = studentSubjectId
-//        )
-//    }
 
     override suspend fun createComment(
         studentId: Long,

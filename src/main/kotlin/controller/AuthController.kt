@@ -19,7 +19,7 @@ class AuthController(
         application.routing {
             post("auth/login") {
                 val request = call.receive<LoginRequestDto>()
-                val token = loginUseCase.login(request.email, request.password)
+                val token = loginUseCase.login(request.email, request.password, request.role)
                 if (token != null) {
                     call.respond(LoginResponseDto(token))
                 } else {

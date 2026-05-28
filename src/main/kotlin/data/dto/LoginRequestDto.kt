@@ -1,7 +1,8 @@
 package data.dto
 
+import domain.model.UserRole
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LoginRequestDto(val email: String, val password: String)
+data class LoginRequestDto(val email: String, val password: String, val role: UserRole)
 
