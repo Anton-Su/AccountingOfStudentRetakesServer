@@ -13,4 +13,5 @@ interface AdminRepository {
     suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?, subjectId: Long): Retake
     suspend fun updateRetake(id: Long, startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?, subjectId: Long): Retake
     suspend fun getAllComments(): List<Comment>
+    suspend fun findAllRetakes(): List<Retake>
 }

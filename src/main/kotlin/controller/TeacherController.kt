@@ -60,9 +60,9 @@ class TeacherController(
                         return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
                     }
                     call.respond(
-                        mapOf(
-                            "retake" to details.retake.toRetakeDetailDto(),
-                            "enrollments" to details.enrollments.map { it.toEnrollmentDto() }
+                        RetakeDetailsResponse(
+                            retake = details.retake.toRetakeDetailDto(),
+                            enrollments = details.enrollments.map { it.toEnrollmentDto() }
                         )
                     )
                 }

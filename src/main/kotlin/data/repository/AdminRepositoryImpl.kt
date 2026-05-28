@@ -35,6 +35,8 @@ class AdminRepositoryImpl : AdminRepository {
         }
     }
 
+
+
     override suspend fun findAllSubjects(): List<Subject> = transaction {
         SubjectsTable.selectAll()
             .map {
@@ -100,6 +102,18 @@ class AdminRepositoryImpl : AdminRepository {
                 comment = it[CommentsTable.comment],
                 retakeId = it[CommentsTable.retakeId].value
             )
+        }
+    }
+
+    override suspend fun findAllRetakes(): List<Retake> = transaction {
+        val allTeacherIds = RetakeTeachersTable.selectAll()
+            .groupBy(
+                { it[RetakeTeachersTable.retakeId].value },
+                { it[RetakeTeachersTable.teacherId].value }
+            )
+        RetakesTable.selectAll().map { row ->
+            val retakeId = row[RetakesTable.id].value
+            row.toRetake(allTeacherIds[retakeId] ?: emptyList())
         }
     }
 
