@@ -13,10 +13,6 @@ class GetStudentDebtsUseCase(
                 id = debt.id,
                 subjectId = subject.id,
                 subjectTitle = subject.title,
-                //teacherId = debt.teacherId,
-                //createdAt = debt.createdAt,
-                //status = debt.status,
-                //retakeId = studentRepository.findRetakeIdByDebtId(debt.id)
             )
         }
     }
