@@ -2,7 +2,6 @@ package data.dto
 
 import kotlinx.serialization.Serializable
 import domain.model.Retake
-import domain.model.RetakeEnrollment
 
 @Serializable
 data class RetakeDetailDto(
