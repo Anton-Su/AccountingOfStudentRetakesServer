@@ -1,6 +1,5 @@
 package data.databases
 
-import domain.model.DebtStatus
 import domain.model.StudentSubjectStatus
 import domain.model.UserRole
 import org.jetbrains.exposed.dao.id.EntityID
@@ -14,7 +13,7 @@ import java.time.Instant
 object DatabaseSeeder {
     fun seed() {
         if (UsersTable.selectAll().any()) return
-        val adminId = insertUser(
+        insertUser(
             role = UserRole.ADMIN,
             firstName = "Александр",
             secondName = "Сергеевич",
@@ -63,13 +62,20 @@ object DatabaseSeeder {
         val configSubjectId = insertSubject("Конфигурационное управление")
         val mobileSubjectId = insertSubject("Мобильная разработка")
         val statehoodSubjectId = insertSubject("Основы российской государственности")
-        // 📌 ЖУРНАЛ СТУДЕНТА (единая сущность вместо Debt)
+        // ЖУРНАЛ СТУДЕНТА
         val configStudentSubjectId = insertStudentSubject(
             studentId = studentId,
             subjectId = configSubjectId,
             status = StudentSubjectStatus.DEBT,
             score = null,
             updatedAt = 1_715_500_000_000
+        )
+        val statehoodStudentSubjectId = insertStudentSubject(
+            studentId = studentId,
+            subjectId = statehoodSubjectId,
+            status = StudentSubjectStatus.DEBT,
+            score = null,
+            updatedAt = 1_715_586_400_000
         )
         insertStudentSubject(
             studentId = studentId,
@@ -78,14 +84,7 @@ object DatabaseSeeder {
             score = 4,
             updatedAt = 1_715_400_000_000
         )
-        insertStudentSubject(
-            studentId = studentId,
-            subjectId = statehoodSubjectId,
-            status = StudentSubjectStatus.DEBT,
-            score = null,
-            updatedAt = 1_715_586_400_000
-        )
-        // 📌 РЕТЕЙКИ
+        // РЕТЕЙКИ
         val retakeId = insertRetake(
             type = "Экзамен",
             place = "Ауд. 101",
@@ -93,14 +92,26 @@ object DatabaseSeeder {
             startAt = 1_716_000_000_000,
             endAt = 1_716_086_400_000
         )
-        linkRetakeTeacher(retakeId, teacher1Id)
+        val retake2Id = insertRetake(
+            type = "Экзамен",
+            place = "Ауд. 404",
+            admission = "20 баллов допуска",
+            startAt = 1_720_000_000_000,
+            endAt = 1_720_086_400_000
+        )
         linkRetakeTeacher(retakeId, teacher2Id)
-        // 📌 ЗАПИСЬ НА ПЕРЕСДАЧУ (теперь через studentSubject)
+        linkRetakeTeacher(retake2Id, teacher1Id)
+        // ЗАПИСЬ НА ПЕРЕСДАЧУ
         insertEnrollment(
             retakeId = retakeId,
             studentSubjectId = configStudentSubjectId
         )
-        // 📌 ОЦЕНКА
+        insertEnrollment(
+            retakeId = retake2Id,
+            studentSubjectId = statehoodStudentSubjectId
+        )
+
+        // ОЦЕНКА
         val gradedAt = 1_716_000_100_000
         insertGrade(
             retakeId = retakeId,

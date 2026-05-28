@@ -10,7 +10,7 @@ import data.databases.StudentSubjectsTable
 import data.databases.SubjectsTable
 import domain.model.Comment
 //import domain.model.Debt
-import domain.model.DebtStatus
+//import domain.model.DebtStatus
 import domain.model.Retake
 import domain.model.RetakeEnrollment
 import domain.model.StudentDebt
@@ -57,10 +57,6 @@ class StudentRepositoryImpl : StudentRepository {
             ?.toRetake()
     }
 
-//    override suspend fun findRetakeIdByDebtId(debtId: Long): Long? = transaction {
-//        findRetakeIdByDebtIdInternal(debtId)
-//    }
-
     override suspend fun enrollToRetake(studentId: Long, subjectId: Long, retakeId: Long): Boolean = transaction {
         val studentSubject = StudentSubjectsTable
             .selectAll()
@@ -80,7 +76,6 @@ class StudentRepositoryImpl : StudentRepository {
             it[RetakeEnrollmentsTable.studentSubjectId] = studentSubjectId
             it[RetakeEnrollmentsTable.enrolledAt] = Instant.now().toEpochMilli()
         }
-
         true
     }
 
@@ -180,56 +175,15 @@ class StudentRepositoryImpl : StudentRepository {
         )
     }
 
-//    private fun requireOwnedDebtRowInternal(studentId: Long, debtId: Long): ResultRow {
-//        val debtRow = DebtsTable.selectAll()
-//            .firstOrNull { it[DebtsTable.id].value == debtId }
-//            ?: throw IllegalArgumentException("Debt with id $debtId not found")
-//
-//        val studentSubjectId = debtRow[DebtsTable.studentSubjectId].value
-//        val ssRow = findStudentSubjectRow(studentSubjectId)
-//            ?: throw IllegalArgumentException("Student subject $studentSubjectId not found")
-//
-//        if (ssRow[StudentSubjectsTable.studentId].value != studentId) {
-//            throw IllegalArgumentException("Debt with id $debtId not found for student $studentId")
-//        }
-//        return debtRow
-//    }
-
-//    private fun requireOwnedActiveDebtRowInternal(studentId: Long, debtId: Long): ResultRow {
-//        val debtRow = requireOwnedDebtRowInternal(studentId, debtId)
-//        require(debtRow[DebtsTable.status] == DebtStatus.ACTIVE) { "Debt $debtId is not active" }
-//        return debtRow
-//    }
-
     private fun findRetakeByIdInternal(retakeId: Long): Retake? =
         RetakesTable.selectAll()
             .firstOrNull { it[RetakesTable.id].value == retakeId }
             ?.toRetake()
 
-//    private fun findRetakeIdByDebtIdInternal(debtId: Long): Long? {
-//        val debtRow = DebtsTable.selectAll().firstOrNull { it[DebtsTable.id].value == debtId } ?: return null
-//        val studentSubjectId = debtRow[DebtsTable.studentSubjectId].value
-//        return RetakeEnrollmentsTable.selectAll()
-//            .firstOrNull { it[RetakeEnrollmentsTable.studentSubjectId].value == studentSubjectId }
-//            ?.let { it[RetakeEnrollmentsTable.retakeId].value }
-//    }
-
     private fun findStudentSubjectRow(studentSubjectId: Long): ResultRow? =
         StudentSubjectsTable.selectAll()
             .firstOrNull { it[StudentSubjectsTable.id].value == studentSubjectId }
 
-//    private fun ResultRow.toDebtOrNull(): Debt? {
-//        val studentSubjectId = this[DebtsTable.studentSubjectId].value
-//        val ssRow = findStudentSubjectRow(studentSubjectId) ?: return null
-//        return Debt(
-//            id = this[DebtsTable.id].value,
-//            studentId = ssRow[StudentSubjectsTable.studentId].value,
-//            subjectId = ssRow[StudentSubjectsTable.subjectId].value,
-//            teacherId = this[DebtsTable.teacherId].value,
-//            createdAt = this[DebtsTable.createdAt],
-//            status = this[DebtsTable.status]
-//        )
-//    }
 
     private fun ResultRow.toSubject(): Subject = Subject(
         id = this[SubjectsTable.id].value,
