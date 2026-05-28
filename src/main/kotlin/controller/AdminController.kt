@@ -3,6 +3,7 @@ package controller
 import data.dto.*
 import domain.model.UserRole
 import domain.usecases.CreateRetakeUseCase
+import domain.usecases.DeleteRetakeUseCase
 import domain.usecases.GetAllCommentsUseCase
 import domain.usecases.GetAllRetakesUseCase
 import domain.usecases.GetSubjectsUseCase
@@ -13,6 +14,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -26,6 +28,7 @@ class AdminController(
     private val redactRetakeUseCase: RedactRetakeUseCase,
     private val getAllCommentsUseCase: GetAllCommentsUseCase,
     private val getAllRetakesUseCase: GetAllRetakesUseCase,
+    private val deleteRetakeUseCase: DeleteRetakeUseCase,
 ) {
     fun configure(application: Application) {
         application.routing {
@@ -78,6 +81,16 @@ class AdminController(
                         subjectId = request.subjectId,
                     )
                     call.respond(HttpStatusCode.OK, updated.toCreateRetakeResponseDto())
+                }
+                delete("/api/admin/retakes/{id}") {
+                    call.requireRole(UserRole.ADMIN)
+                    val id = call.parameters["id"]?.toLongOrNull()
+                        ?: return@delete call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("error" to "Invalid id")
+                        )
+                    deleteRetakeUseCase(id)
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Retake deleted"))
                 }
 
                 get("api/admin/retakes") {

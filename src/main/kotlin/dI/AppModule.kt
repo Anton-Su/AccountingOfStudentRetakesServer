@@ -23,6 +23,7 @@ import domain.usecases.GetRetakeDetailsUseCase
 import domain.usecases.GetTeacherRetakesUseCase
 import domain.usecases.GetStudentDebtsUseCase
 import domain.usecases.CreateCommentUseCase
+import domain.usecases.DeleteRetakeUseCase
 import domain.usecases.GetAllCommentsUseCase
 import domain.usecases.GetAllRetakesUseCase
 import domain.usecases.GetStudentDebtRankUseCase
@@ -47,6 +48,7 @@ object AppContainer {
     }
     val getAllRetakesUseCase: GetAllRetakesUseCase by lazy { GetAllRetakesUseCase(adminRepository) }
     val getAllCommentsUseCase: GetAllCommentsUseCase by lazy {GetAllCommentsUseCase(adminRepository)}
+    val deleteRetakeUseCase: DeleteRetakeUseCase by lazy { DeleteRetakeUseCase(adminRepository)}
     val getSubjectsUseCase: GetSubjectsUseCase by lazy { GetSubjectsUseCase(adminRepository) }
     val getTeacherRetakesUseCase: GetTeacherRetakesUseCase by lazy { GetTeacherRetakesUseCase(teacherRepository) }
     val getRetakeDetailsUseCase: GetRetakeDetailsUseCase by lazy { GetRetakeDetailsUseCase(studentRepository, teacherRepository) }
@@ -59,7 +61,7 @@ object AppContainer {
         StudentController(userRepository, getStudentDebtsUseCase, enrollToRetakeUseCase, cancelRetakeEnrollmentUseCase, createCommentUseCase, getStudentDebtRankUseCase)
     }
     val adminController: AdminController by lazy {
-        AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase, getAllRetakesUseCase)
+        AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase, getAllRetakesUseCase, deleteRetakeUseCase)
     }
     val teacherController: TeacherController by lazy {
         TeacherController(userRepository, studentRepository, getTeacherRetakesUseCase, getRetakeDetailsUseCase, gradeStudentUseCase)

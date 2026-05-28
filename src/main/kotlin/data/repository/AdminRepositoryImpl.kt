@@ -117,6 +117,11 @@ class AdminRepositoryImpl : AdminRepository {
         }
     }
 
+    override suspend fun deleteRetake(id: Long): Unit = transaction {
+        val deleted = RetakesTable.deleteWhere { RetakesTable.id eq id }
+        if (deleted == 0) throw IllegalArgumentException("Retake with id $id not found")
+    }
+
     private fun loadRetake(retakeId: Long): Retake {
         val row = RetakesTable.selectAll().first { it[RetakesTable.id].value == retakeId }
         val teacherIds = RetakeTeachersTable.selectAll()
