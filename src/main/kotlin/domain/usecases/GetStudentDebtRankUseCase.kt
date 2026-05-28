@@ -7,17 +7,15 @@ class GetStudentDebtRankUseCase(
     private val studentRepository: StudentRepository
 ) {
     suspend operator fun invoke(studentId: Long): StudentDebtRank {
-        val studentsDebts = studentRepository
-            .getStudentsDebtCounts()
-            .sortedBy { it.second }
+        val studentsDebts = studentRepository.getStudentsDebtCounts().sortedBy { it.second }
         val totalStudents = studentsDebts.size
         if (totalStudents == 0) {
             return StudentDebtRank(
                 studentId = studentId,
                 debtsCount = 0,
                 place = 0,
-                totalStudents = 0,
-                topPercent = 0
+                totalStudents = totalStudents,
+                topPercent = 100
             )
         }
         val studentIndex = studentsDebts.indexOfFirst { it.first == studentId }
@@ -25,15 +23,14 @@ class GetStudentDebtRankUseCase(
             return StudentDebtRank(
                 studentId = studentId,
                 debtsCount = 0,
-                place = totalStudents,
+                place = 0,
                 totalStudents = totalStudents,
                 topPercent = 100 // хардкорное значение добавлено
             )
         }
         val place = studentIndex + 1
         val debtsCount = studentsDebts[studentIndex].second
-        val topPercent =
-            (((totalStudents - place).toDouble() / totalStudents) * 100).toInt()
+        val topPercent = (((totalStudents - place).toDouble() / totalStudents) * 100).toInt()
         return StudentDebtRank(
             studentId = studentId,
             debtsCount = debtsCount,
