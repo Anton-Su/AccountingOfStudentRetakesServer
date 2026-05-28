@@ -10,9 +10,11 @@ import controller.TeacherController
 import data.repository.AdminRepositoryImpl
 import data.repository.UserRepositoryImpl
 import data.repository.StudentRepositoryImpl
+import data.repository.TeacherRepositoryImpl
 import domain.repository.AdminRepository
 import domain.repository.UserRepository
 import domain.repository.StudentRepository
+import domain.repository.TeacherRepository
 import domain.usecases.CreateRetakeUseCase
 import domain.usecases.CancelRetakeEnrollmentUseCase
 import domain.usecases.EnrollToRetakeUseCase
@@ -32,6 +34,7 @@ object AppContainer {
     val userRepository: UserRepository by lazy { UserRepositoryImpl() }
     val studentRepository: StudentRepository by lazy { StudentRepositoryImpl() }
     val adminRepository: AdminRepository by lazy { AdminRepositoryImpl() }
+    val teacherRepository: TeacherRepository by lazy { TeacherRepositoryImpl() }
     val loginUseCase: LoginUseCase by lazy { LoginUseCase(userRepository, PasswordHasher) }
     val getStudentDebtsUseCase: GetStudentDebtsUseCase by lazy { GetStudentDebtsUseCase(studentRepository) }
     val createCommentUseCase: CreateCommentUseCase by lazy { CreateCommentUseCase(studentRepository) }
@@ -43,9 +46,9 @@ object AppContainer {
     }
     val getAllCommentsUseCase: GetAllCommentsUseCase by lazy {GetAllCommentsUseCase(adminRepository)}
     val getSubjectsUseCase: GetSubjectsUseCase by lazy { GetSubjectsUseCase(adminRepository) }
-    val getTeacherRetakesUseCase: GetTeacherRetakesUseCase by lazy { GetTeacherRetakesUseCase(studentRepository) }
-    val getRetakeDetailsUseCase: GetRetakeDetailsUseCase by lazy { GetRetakeDetailsUseCase(studentRepository) }
-    val gradeStudentUseCase: GradeStudentUseCase by lazy { GradeStudentUseCase(studentRepository) }
+    val getTeacherRetakesUseCase: GetTeacherRetakesUseCase by lazy { GetTeacherRetakesUseCase(teacherRepository) }
+    val getRetakeDetailsUseCase: GetRetakeDetailsUseCase by lazy { GetRetakeDetailsUseCase(studentRepository, teacherRepository) }
+    val gradeStudentUseCase: GradeStudentUseCase by lazy { GradeStudentUseCase(teacherRepository) }
     val createRetakeUseCase: CreateRetakeUseCase by lazy { CreateRetakeUseCase(adminRepository) }
     val redactRetakeUseCase: RedactRetakeUseCase by lazy { RedactRetakeUseCase(adminRepository) }
     val authController: AuthController by lazy { AuthController(loginUseCase) }

@@ -2,9 +2,10 @@ package domain.usecases
 
 import domain.model.RetakeEnrollment
 import domain.repository.StudentRepository
+import domain.repository.TeacherRepository
 
 class GradeStudentUseCase(
-    private val studentRepository: StudentRepository
+    private val teacherRepository: TeacherRepository
 ) {
     suspend operator fun invoke(retakeId: Long, studentId: Long, type: String, score: Int): RetakeEnrollment {
         require(retakeId > 0) { "Retake ID must be positive" }
@@ -13,6 +14,6 @@ class GradeStudentUseCase(
         require(score in range) {
             "Invalid score for type=$type"
         }
-        return studentRepository.gradeStudent(retakeId, studentId, score)
+        return teacherRepository.gradeStudent(retakeId, studentId, score)
     }
 }
