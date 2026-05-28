@@ -175,6 +175,20 @@ class StudentRepositoryImpl : StudentRepository {
         )
     }
 
+    override suspend fun getStudentsDebtCounts(): List<Pair<Long, Int>> = transaction {
+        StudentSubjectsTable
+            .selectAll()
+            .where {
+                StudentSubjectsTable.status eq StudentSubjectStatus.DEBT
+            }
+            .groupBy { row ->
+                row[StudentSubjectsTable.studentId].value
+            }
+            .map { (studentId, rows) ->
+                studentId to rows.size
+            }
+    }
+
     private fun findRetakeByIdInternal(retakeId: Long): Retake? =
         RetakesTable.selectAll()
             .firstOrNull { it[RetakesTable.id].value == retakeId }

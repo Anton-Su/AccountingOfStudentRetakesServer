@@ -6,6 +6,7 @@ import domain.repository.UserRepository
 import domain.usecases.CancelRetakeEnrollmentUseCase
 import domain.usecases.CreateCommentUseCase
 import domain.usecases.EnrollToRetakeUseCase
+import domain.usecases.GetStudentDebtRankUseCase
 import domain.usecases.GetStudentDebtsUseCase
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -16,7 +17,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import security.currentEmail
 import security.requireRole
@@ -26,7 +26,8 @@ class StudentController(
     private val getStudentDebtsUseCase: GetStudentDebtsUseCase,
     private val enrollToRetakeUseCase: EnrollToRetakeUseCase,
     private val cancelRetakeEnrollmentUseCase: CancelRetakeEnrollmentUseCase,
-    private val createCommentUseCase: CreateCommentUseCase
+    private val createCommentUseCase: CreateCommentUseCase,
+    private val getStudentDebtRankUseCase: GetStudentDebtRankUseCase
 ) {
     fun configure(application: Application) {
         application.routing {
@@ -69,6 +70,16 @@ class StudentController(
                             retakeId = request.retakeId,
                         )
                     call.respond(HttpStatusCode.Created, created.toDto())
+                }
+                get("api/student/{studentId}/debts/rank") {
+                    call.requireRole(UserRole.STUDENT)
+                    val studentId = call.pathStudentId()
+                        ?: return@get
+                    if (!call.requireOwnStudent(studentId)) {
+                        return@get
+                    }
+                    val result = getStudentDebtRankUseCase(studentId)
+                    call.respond(result.toDto())
                 }
             }
         }

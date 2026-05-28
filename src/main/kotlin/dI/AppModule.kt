@@ -21,6 +21,7 @@ import domain.usecases.GetRetakeDetailsUseCase
 import domain.usecases.GetTeacherRetakesUseCase
 import domain.usecases.GetStudentDebtsUseCase
 import domain.usecases.CreateCommentUseCase
+import domain.usecases.GetStudentDebtRankUseCase
 import domain.usecases.RedactRetakeUseCase
 import domain.usecases.GetSubjectsUseCase
 import domain.usecases.GetTeachersByDisciplineUseCase
@@ -33,6 +34,7 @@ object AppContainer {
     val loginUseCase: LoginUseCase by lazy { LoginUseCase(userRepository, PasswordHasher) }
     val getStudentDebtsUseCase: GetStudentDebtsUseCase by lazy { GetStudentDebtsUseCase(studentRepository) }
     val createCommentUseCase: CreateCommentUseCase by lazy { CreateCommentUseCase(studentRepository) }
+    val getStudentDebtRankUseCase: GetStudentDebtRankUseCase by lazy { GetStudentDebtRankUseCase(studentRepository) }
     val enrollToRetakeUseCase: EnrollToRetakeUseCase by lazy { EnrollToRetakeUseCase(studentRepository) }
     val cancelRetakeEnrollmentUseCase: CancelRetakeEnrollmentUseCase by lazy { CancelRetakeEnrollmentUseCase(studentRepository) }
     val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase by lazy {
@@ -52,7 +54,8 @@ object AppContainer {
             getStudentDebtsUseCase,
             enrollToRetakeUseCase,
             cancelRetakeEnrollmentUseCase,
-            createCommentUseCase
+            createCommentUseCase,
+            getStudentDebtRankUseCase
         )
     }
     val adminController: AdminController by lazy {

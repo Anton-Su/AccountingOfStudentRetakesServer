@@ -19,5 +19,6 @@ interface StudentRepository {
     suspend fun findEnrollmentsByRetakeId(retakeId: Long): List<RetakeEnrollment>
     suspend fun gradeStudent(retakeId: Long, studentId: Long, score: Int): RetakeEnrollment
     suspend fun createComment(studentId: Long, gradeplace: Int, gradeteacher: Int, gradeoverall: Int, comment: String?, retakeId: Long): Comment
+    suspend fun getStudentsDebtCounts(): List<Pair<Long, Int>>
 }
 
