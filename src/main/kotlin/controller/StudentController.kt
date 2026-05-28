@@ -44,8 +44,7 @@ class StudentController(
                     if (!call.requireOwnStudent(studentId)) return@post
                     val debtId = call.longPathParam("debtId") ?: return@post
                     val retakeId = call.longPathParam("retakeId") ?: return@post
-                    val updated = enrollToRetakeUseCase(studentId, debtId, retakeId)
-                    call.respond(updated.toDto())
+                    call.respond(enrollToRetakeUseCase(studentId, debtId, retakeId))
                 }
                 delete("api/student/{studentId}/debts/{debtId}/retakes/{retakeId}") {
                     call.requireRole(UserRole.STUDENT)
@@ -53,8 +52,7 @@ class StudentController(
                     if (!call.requireOwnStudent(studentId)) return@delete
                     val debtId = call.longPathParam("debtId") ?: return@delete
                     val retakeId = call.longPathParam("retakeId") ?: return@delete
-                    val updated = cancelRetakeEnrollmentUseCase(studentId, debtId, retakeId)
-                    call.respond(updated.toDto())
+                    call.respond(cancelRetakeEnrollmentUseCase(studentId, debtId, retakeId))
                 }
                 post("api/student/{studentId}/comments") {
                     call.requireRole(UserRole.STUDENT)

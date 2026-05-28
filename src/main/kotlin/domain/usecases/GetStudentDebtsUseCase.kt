@@ -10,13 +10,13 @@ class GetStudentDebtsUseCase(
         return studentRepository.findDebtsByStudentId(studentId).mapNotNull { debt ->
             val subject = studentRepository.findSubjectById(debt.subjectId) ?: return@mapNotNull null
             StudentDebt(
-                debtId = debt.id,
+                id = debt.id,
                 subjectId = subject.id,
                 subjectTitle = subject.title,
-                teacherId = debt.teacherId,
-                createdAt = debt.createdAt,
-                status = debt.status,
-                retakeId = studentRepository.findRetakeIdByDebtId(debt.id)
+                //teacherId = debt.teacherId,
+                //createdAt = debt.createdAt,
+                //status = debt.status,
+                //retakeId = studentRepository.findRetakeIdByDebtId(debt.id)
             )
         }
     }

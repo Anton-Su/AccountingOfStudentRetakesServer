@@ -14,7 +14,7 @@ import java.time.Instant
 object DatabaseSeeder {
     fun seed() {
         if (UsersTable.selectAll().any()) return
-        insertUser(
+        val adminId = insertUser(
             role = UserRole.ADMIN,
             firstName = "Александр",
             secondName = "Сергеевич",
@@ -57,59 +57,35 @@ object DatabaseSeeder {
         insertStudentProfile(studentId, "ИКБО-61-23")
         insertTeacherProfile(teacher1Id)
         insertTeacherProfile(teacher2Id)
-        insertTeacherDiscipline(
-            teacher1Id,
-            "Конфигурационное управление"
-        )
-        insertTeacherDiscipline(
-            teacher1Id,
-            "Мобильная разработка"
-        )
-        insertTeacherDiscipline(
-            teacher2Id,
-            "Основы российской государственности"
-        )
-        val configManagementSubjectId =
-            insertSubject("Конфигурационное управление")
-        val mobileDevSubjectId =
-            insertSubject("Мобильная разработка")
-        val statehoodSubjectId =
-            insertSubject("Основы российской государственности")
-
+        insertTeacherDiscipline(teacher1Id, "Конфигурационное управление")
+        insertTeacherDiscipline(teacher1Id, "Мобильная разработка")
+        insertTeacherDiscipline(teacher2Id, "Основы российской государственности")
+        val configSubjectId = insertSubject("Конфигурационное управление")
+        val mobileSubjectId = insertSubject("Мобильная разработка")
+        val statehoodSubjectId = insertSubject("Основы российской государственности")
+        // 📌 ЖУРНАЛ СТУДЕНТА (единая сущность вместо Debt)
         val configStudentSubjectId = insertStudentSubject(
             studentId = studentId,
-            subjectId = configManagementSubjectId,
+            subjectId = configSubjectId,
             status = StudentSubjectStatus.DEBT,
             score = null,
             updatedAt = 1_715_500_000_000
         )
         insertStudentSubject(
             studentId = studentId,
-            subjectId = mobileDevSubjectId,
+            subjectId = mobileSubjectId,
             status = StudentSubjectStatus.OK,
             score = 4,
             updatedAt = 1_715_400_000_000
         )
-        val statehoodStudentSubjectId = insertStudentSubject(
+        insertStudentSubject(
             studentId = studentId,
             subjectId = statehoodSubjectId,
             status = StudentSubjectStatus.DEBT,
             score = null,
             updatedAt = 1_715_586_400_000
         )
-
-        val configDebtId = insertDebt(
-            studentSubjectId = configStudentSubjectId,
-            teacherId = teacher1Id,
-            createdAt = 1_715_500_000_000,
-            status = DebtStatus.ACTIVE
-        )
-        insertDebt(
-            studentSubjectId = statehoodStudentSubjectId,
-            teacherId = teacher2Id,
-            createdAt = 1_715_586_400_000,
-            status = DebtStatus.ACTIVE
-        )
+        // 📌 РЕТЕЙКИ
         val retakeId = insertRetake(
             type = "Экзамен",
             place = "Ауд. 101",
@@ -119,10 +95,12 @@ object DatabaseSeeder {
         )
         linkRetakeTeacher(retakeId, teacher1Id)
         linkRetakeTeacher(retakeId, teacher2Id)
+        // 📌 ЗАПИСЬ НА ПЕРЕСДАЧУ (теперь через studentSubject)
         insertEnrollment(
             retakeId = retakeId,
             studentSubjectId = configStudentSubjectId
         )
+        // 📌 ОЦЕНКА
         val gradedAt = 1_716_000_100_000
         insertGrade(
             retakeId = retakeId,
@@ -130,6 +108,7 @@ object DatabaseSeeder {
             score = 4,
             gradedAt = gradedAt
         )
+        // ОБНОВЛЕНИЕ ЖУРНАЛА
         updateStudentSubjectAfterGrade(
             studentSubjectId = configStudentSubjectId,
             score = 5,
@@ -181,31 +160,20 @@ object DatabaseSeeder {
         it[SubjectsTable.title] = title
     }
 
-    private fun insertDebt(
-        studentSubjectId: EntityID<Long>,
-        teacherId: EntityID<Long>,
-        createdAt: Long,
-        status: DebtStatus
-    ): EntityID<Long> = DebtsTable.insertAndGetId {
-        it[DebtsTable.studentSubjectId] = studentSubjectId
-        it[DebtsTable.teacherId] = teacherId
-        it[DebtsTable.createdAt] = createdAt
-        it[DebtsTable.status] = status
-    }
-
     private fun insertStudentSubject(
         studentId: EntityID<Long>,
         subjectId: EntityID<Long>,
         status: StudentSubjectStatus,
         score: Int?,
         updatedAt: Long
-    ): EntityID<Long> = StudentSubjectsTable.insertAndGetId {
-        it[StudentSubjectsTable.studentId] = studentId
-        it[StudentSubjectsTable.subjectId] = subjectId
-        it[StudentSubjectsTable.status] = status
-        it[StudentSubjectsTable.score] = score
-        it[StudentSubjectsTable.updatedAt] = updatedAt
-    }
+    ): EntityID<Long> =
+        StudentSubjectsTable.insertAndGetId {
+            it[StudentSubjectsTable.studentId] = studentId
+            it[StudentSubjectsTable.subjectId] = subjectId
+            it[StudentSubjectsTable.status] = status
+            it[StudentSubjectsTable.score] = score
+            it[StudentSubjectsTable.updatedAt] = updatedAt
+        }
 
     private fun insertRetake(type: String, place: String, admission: String?, startAt: Long, endAt: Long): EntityID<Long> =
         RetakesTable.insertAndGetId {
