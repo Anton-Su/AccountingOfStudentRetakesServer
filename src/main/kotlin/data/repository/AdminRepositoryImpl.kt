@@ -88,7 +88,7 @@ class AdminRepositoryImpl : AdminRepository {
         val row = RetakesTable.selectAll().first { it[RetakesTable.id].value == retakeId }
         val teacherIds = RetakeTeachersTable.selectAll()
             .filter { it[RetakeTeachersTable.retakeId].value == retakeId }
-            .map { it[RetakeTeachersTable.teacherId].value }
+            .map { it[RetakeTeachersTable.teacherId] } // <- .value убрать
         return row.toRetake(teacherIds)
     }
 

@@ -29,7 +29,7 @@ class TeacherController(
     fun configure(application: Application) {
         application.routing {
             authenticate("auth-jwt") {
-                get("teacher/retakes") {
+                get("api/teacher/retakes") {
                     call.requireRole(UserRole.TEACHER)
                     val email = call.currentEmail() ?: return@get call.respond(
                         HttpStatusCode.Unauthorized,
@@ -43,7 +43,7 @@ class TeacherController(
                     val retakes = getTeacherRetakesUseCase(teacherId.toLong())
                     call.respond(retakes.map { it.toRetakeDetailDto() })
                 }
-                get("teacher/retake/{retakeId}") {
+                get("api/teacher/retake/{retakeId}") {
                     call.requireRole(UserRole.TEACHER)
                     val email = call.currentEmail() ?: return@get call.respond(
                         HttpStatusCode.Unauthorized,
@@ -66,7 +66,7 @@ class TeacherController(
                         )
                     )
                 }
-                post("teacher/retake/{retakeId}/student/{studentId}/grade") {
+                post("api/teacher/retake/{retakeId}/student/{studentId}/grade") {
                     call.requireRole(UserRole.TEACHER)
                     val email = call.currentEmail() ?: return@post call.respond(
                         HttpStatusCode.Unauthorized,

@@ -68,10 +68,10 @@ object DatabaseSeeder {
         val retake3Id = insertRetake( type = "Зачет", place = "Ауд. 212", admission = "Лабораторные должны быть сданы", startAt = 1_721_000_000_000, endAt = 1_721_050_000_000 )
         val retake4Id = insertRetake( type = "Экзамен", place = "Ауд. 505", admission = "Минимум 30 баллов", startAt = 1_722_000_000_000, endAt = 1_722_086_400_000 )
 
-        linkRetakeTeacher(retake1Id, teacher2Id)
-        linkRetakeTeacher(retake2Id, teacher1Id)
-        linkRetakeTeacher(retake3Id, teacher3Id)
-        linkRetakeTeacher(retake4Id, teacher4Id)
+        linkRetakeTeacher(retake1Id, teacher2Id.value)
+        linkRetakeTeacher(retake2Id, teacher1Id.value)
+        linkRetakeTeacher(retake3Id, teacher3Id.value)
+        linkRetakeTeacher(retake4Id, teacher4Id.value)
 
         insertEnrollment( retakeId = retake1Id, studentSubjectId = maximConfigId )
         insertEnrollment( retakeId = retake2Id, studentSubjectId = maximStatehoodId )
@@ -164,7 +164,7 @@ object DatabaseSeeder {
             it[RetakesTable.lastModified] = Instant.now().toEpochMilli()
         }
 
-    private fun linkRetakeTeacher(retakeId: EntityID<Long>, teacherId: EntityID<Long>) {
+    private fun linkRetakeTeacher(retakeId: EntityID<Long>, teacherId: Long) {
         RetakeTeachersTable.insert {
             it[RetakeTeachersTable.retakeId] = retakeId
             it[RetakeTeachersTable.teacherId] = teacherId

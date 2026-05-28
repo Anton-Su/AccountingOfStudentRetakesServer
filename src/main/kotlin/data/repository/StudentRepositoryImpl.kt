@@ -103,7 +103,7 @@ class StudentRepositoryImpl : StudentRepository {
 
     override suspend fun findRetakesByTeacherId(teacherId: Long): List<Retake> = transaction {
         val retakeIds = RetakeTeachersTable.selectAll()
-            .filter { it[RetakeTeachersTable.teacherId].value == teacherId }
+            .filter { it[RetakeTeachersTable.teacherId] == teacherId }
             .map { it[RetakeTeachersTable.retakeId].value }
             .distinct()
         retakeIds.mapNotNull { findRetakeByIdInternal(it) }
@@ -208,7 +208,7 @@ class StudentRepositoryImpl : StudentRepository {
         val retakeId = this[RetakesTable.id].value
         val teacherIds = RetakeTeachersTable.selectAll()
             .filter { it[RetakeTeachersTable.retakeId].value == retakeId }
-            .map { it[RetakeTeachersTable.teacherId].value }
+            .map { it[RetakeTeachersTable.teacherId]}
         return Retake(
             id = retakeId,
             type = this[RetakesTable.type],

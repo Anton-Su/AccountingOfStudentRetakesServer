@@ -26,7 +26,7 @@ class AdminController(
     fun configure(application: Application) {
         application.routing {
             authenticate("auth-jwt") {
-                get("admin/teachers") {
+                get("api/admin/teachers") {
                     call.requireRole(UserRole.ADMIN)
                     val discipline = call.request.queryParameters["discipline"]
                         ?: return@get call.respond(
@@ -36,12 +36,12 @@ class AdminController(
                     val teachers = getTeachersByDisciplineUseCase(discipline)
                     call.respond(teachers.map { it.toTeacherDto() })
                 }
-                get("admin/subjects") {
+                get("api/admin/subjects") {
                     call.requireRole(UserRole.ADMIN)
                     val subjects = getSubjectsUseCase()
                     call.respond(subjects.map { it.toSubjectDto() })
                 }
-                post("admin/create_retake") {
+                post("api/admin/create_retake") {
                     call.requireRole(UserRole.ADMIN)
                     val request = call.receive<CreateRetakeRequestDto>()
                     val retake = createRetakeUseCase(
@@ -54,23 +54,22 @@ class AdminController(
                     )
                     call.respond(HttpStatusCode.Created, retake.toCreateRetakeResponseDto())
                 }
-                put("admin/redact_retake") {
+                put("/api/admin/retakes/{id}") {
                     call.requireRole(UserRole.ADMIN)
+                    val id = call.parameters["id"]?.toLongOrNull()
+                        ?: return@put call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("error" to "Invalid id")
+                        )
                     val request = call.receive<CreateRetakeRequestDto>()
-                    val idParam = call.request.queryParameters["id"]
-                        ?: return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Query parameter 'id' is required"))
-                    val id = try { idParam.toLong() }
-                    catch (_: Exception) {
-                        return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Query parameter 'id' must be a number"))
-                    }
                     val updated = redactRetakeUseCase(
-                            id = id,
-                            startAtIso = request.startAt,
-                            endAtIso = request.endAt,
-                            teacherIds = request.teacherIds,
-                            type = request.type,
-                            place = request.place,
-                            admission = request.admission
+                        id = id,
+                        startAtIso = request.startAt,
+                        endAtIso = request.endAt,
+                        teacherIds = request.teacherIds,
+                        type = request.type,
+                        place = request.place,
+                        admission = request.admission
                     )
                     call.respond(HttpStatusCode.OK, updated.toCreateRetakeResponseDto())
                 }

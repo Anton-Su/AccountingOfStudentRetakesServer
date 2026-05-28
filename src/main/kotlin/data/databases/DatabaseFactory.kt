@@ -30,7 +30,6 @@ object DatabaseFactory {
                 TeacherDisciplinesTable,
                 SubjectsTable,
                 StudentSubjectsTable,
-                // DebtsTable,
                 RetakesTable,
                 RetakeTeachersTable,
                 RetakeEnrollmentsTable,

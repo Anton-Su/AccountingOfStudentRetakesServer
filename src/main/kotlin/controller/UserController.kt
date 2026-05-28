@@ -17,7 +17,7 @@ class UserController(
     fun configure(application: Application) {
         application.routing {
             authenticate("auth-jwt") {
-                get("/users/me") {
+                get("api/users/me") {
                     call.requireRole(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
                     val user = userRepository.getUser(call) ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not found"))
                     call.respond(user.toUserDto())
