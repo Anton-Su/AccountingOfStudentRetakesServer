@@ -12,7 +12,8 @@ data class RetakeDetailDto(
     val endAt: String,
     val lastModified: String,
     val teacherIds: List<Long>,
-    val admission: String? = null
+    val admission: String? = null,
+    val subjectId: Long
 )
 
 fun Retake.toRetakeDetailDto(): RetakeDetailDto = RetakeDetailDto(
@@ -23,5 +24,6 @@ fun Retake.toRetakeDetailDto(): RetakeDetailDto = RetakeDetailDto(
     endAt = this.endAt.toString(),
     lastModified = this.lastModified.toString(),
     teacherIds = this.teacherIds,
+    subjectId = this.subjectId,
     admission = this.admission
 )
