@@ -9,7 +9,6 @@ import data.databases.SubjectsTable
 import data.databases.UsersTable
 import domain.model.Comment
 import domain.model.Retake
-import domain.model.RetakeEnrollment
 import domain.model.StudentDebt
 import domain.model.StudentSubjectStatus
 import domain.model.Subject
@@ -182,14 +181,4 @@ class StudentRepositoryImpl : StudentRepository {
         )
     }
 
-    private fun ResultRow.toEnrollmentOrNull(): RetakeEnrollment? {
-        val studentSubjectId = this[RetakeEnrollmentsTable.studentSubjectId].value
-        val ssRow = findStudentSubjectRow(studentSubjectId) ?: return null
-        return RetakeEnrollment(
-            id = this[RetakeEnrollmentsTable.id].value,
-            retakeId = this[RetakeEnrollmentsTable.retakeId].value,
-            studentId = ssRow[StudentSubjectsTable.studentId].value,
-            studentSubjectId = studentSubjectId
-        )
-    }
 }

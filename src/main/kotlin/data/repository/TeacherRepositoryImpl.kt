@@ -1,16 +1,17 @@
 package data.repository
 
-import data.databases.CommentsTable
 //import data.databases.DebtsTable
 import data.databases.GradesTable
 import data.databases.RetakeEnrollmentsTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
 import data.databases.StudentSubjectsTable
+import data.databases.UsersTable
 import domain.model.Retake
 import domain.model.RetakeEnrollment
 import domain.model.StudentSubjectStatus
 import domain.repository.TeacherRepository
+import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -30,9 +31,20 @@ class TeacherRepositoryImpl : TeacherRepository {
     }
 
     override suspend fun findEnrollmentsByRetakeId(retakeId: Long): List<RetakeEnrollment> = transaction {
-        RetakeEnrollmentsTable.selectAll()
-            .filter { it[RetakeEnrollmentsTable.retakeId].value == retakeId }
-            .mapNotNull { it.toEnrollmentOrNull() }
+        RetakeEnrollmentsTable
+            .join(StudentSubjectsTable, JoinType.INNER, RetakeEnrollmentsTable.studentSubjectId, StudentSubjectsTable.id)
+            .join(UsersTable, JoinType.INNER, StudentSubjectsTable.studentId, UsersTable.id)
+            .selectAll()
+            .where { RetakeEnrollmentsTable.retakeId eq retakeId }
+            .map {
+                RetakeEnrollment(
+                    id = it[RetakeEnrollmentsTable.id].value,
+                    retakeId = it[RetakeEnrollmentsTable.retakeId].value,
+                    studentId = it[StudentSubjectsTable.studentId].value,
+                    studentSubjectId = it[RetakeEnrollmentsTable.studentSubjectId].value,
+                    studentFullName = "${it[UsersTable.secondName]} ${it[UsersTable.firstName]} ${it[UsersTable.lastName]}",
+                )
+            }
     }
 
     override suspend fun gradeStudent(retakeId: Long, studentId: Long, score: Int): RetakeEnrollment = transaction {
@@ -65,7 +77,8 @@ class TeacherRepositoryImpl : TeacherRepository {
             id = enrollmentRow[RetakeEnrollmentsTable.id].value,
             retakeId = retakeId,
             studentId = studentId,
-            studentSubjectId = studentSubjectId
+            studentSubjectId = studentSubjectId,
+            studentFullName = "Test",
         )
     }
 
@@ -96,14 +109,4 @@ class TeacherRepositoryImpl : TeacherRepository {
         )
     }
 
-    private fun ResultRow.toEnrollmentOrNull(): RetakeEnrollment? {
-        val studentSubjectId = this[RetakeEnrollmentsTable.studentSubjectId].value
-        val ssRow = findStudentSubjectRow(studentSubjectId) ?: return null
-        return RetakeEnrollment(
-            id = this[RetakeEnrollmentsTable.id].value,
-            retakeId = this[RetakeEnrollmentsTable.retakeId].value,
-            studentId = ssRow[StudentSubjectsTable.studentId].value,
-            studentSubjectId = studentSubjectId
-        )
-    }
 }
