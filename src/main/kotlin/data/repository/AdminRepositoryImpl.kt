@@ -1,15 +1,18 @@
 package data.repository
 
 import data.databases.CommentsTable
+import data.databases.RetakeEnrollmentsTable
 import data.databases.TeacherDisciplinesTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
 import data.databases.SubjectsTable
+import data.databases.UsersTable
 import domain.model.Comment
 import domain.model.Retake
 import domain.model.Subject
 import domain.model.Teacher
 import domain.repository.AdminRepository
+import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -92,17 +95,26 @@ class AdminRepositoryImpl : AdminRepository {
     }
 
     override suspend fun getAllComments(): List<Comment> = transaction {
-        CommentsTable.selectAll().map {
-            Comment(
-                id = it[CommentsTable.id].value,
-                studentId = it[CommentsTable.studentId].value,
-                gradeplace = it[CommentsTable.gradeplace],
-                gradeteacher = it[CommentsTable.gradeteacher],
-                gradeoverall = it[CommentsTable.gradeoverall],
-                comment = it[CommentsTable.comment],
-                retakeId = it[CommentsTable.retakeId].value
-            )
-        }
+        CommentsTable
+            .join(UsersTable, JoinType.INNER, CommentsTable.studentId, UsersTable.id)
+            .join(RetakesTable, JoinType.INNER, CommentsTable.retakeId, RetakesTable.id)
+            .join(SubjectsTable, JoinType.INNER, RetakesTable.subjectId, SubjectsTable.id)
+            .selectAll()
+            .map {
+                Comment(
+                    id = it[CommentsTable.id].value,
+                    studentId = it[CommentsTable.studentId].value,
+                    studentFullName = "${it[UsersTable.secondName]} ${it[UsersTable.firstName]} ${it[UsersTable.lastName]}",
+                    gradeplace = it[CommentsTable.gradeplace],
+                    gradeteacher = it[CommentsTable.gradeteacher],
+                    gradeoverall = it[CommentsTable.gradeoverall],
+                    comment = it[CommentsTable.comment],
+                    retakeId = it[CommentsTable.retakeId].value,
+                    retakeStartAt = Instant.ofEpochMilli(it[RetakesTable.startAt]).toString(),
+                    retakeEndAt = Instant.ofEpochMilli(it[RetakesTable.endAt]).toString(),
+                    subjectTitle = it[SubjectsTable.title],
+                )
+            }
     }
 
     override suspend fun findAllRetakes(): List<Retake> = transaction {
@@ -118,6 +130,8 @@ class AdminRepositoryImpl : AdminRepository {
     }
 
     override suspend fun deleteRetake(id: Long): Unit = transaction {
+        // RetakeEnrollmentsTable.deleteWhere { RetakeEnrollmentsTable.retakeId eq id }
+        // RetakeTeachersTable.deleteWhere { RetakeTeachersTable.retakeId eq id }
         val deleted = RetakesTable.deleteWhere { RetakesTable.id eq id }
         if (deleted == 0) throw IllegalArgumentException("Retake with id $id not found")
     }

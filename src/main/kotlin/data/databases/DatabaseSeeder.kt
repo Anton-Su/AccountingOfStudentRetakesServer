@@ -65,7 +65,7 @@ object DatabaseSeeder {
 
         val retake1Id = insertRetake( type = "Экзамен", place = "Ауд. 101", admission = "40 баллов допуска", startAt = 1_716_000_000_000, endAt = 1_716_086_400_000, statehoodSubjectId.value )
         val retake2Id = insertRetake( type = "Экзамен", place = "Ауд. 404", admission = "20 баллов допуска", startAt = 1_720_000_000_000, endAt = 1_720_086_400_000, configSubjectId.value )
-        val retake3Id = insertRetake( type = "Зачет", place = "Ауд. 212", admission = "Лабораторные должны быть сданы", startAt = 1_721_000_000_000, endAt = 1_721_050_000_000, operationsSubjectId.value )
+        val retake3Id = insertRetake( type = "Зачёт", place = "Ауд. 212", admission = "Лабораторные должны быть сданы", startAt = 1_721_000_000_000, endAt = 1_721_050_000_000, operationsSubjectId.value )
         val retake4Id = insertRetake( type = "Экзамен", place = "Ауд. 505", admission = "Минимум 30 баллов", startAt = 1_722_000_000_000, endAt = 1_722_086_400_000, dbSubjectId.value )
 
         linkRetakeTeacher(retake1Id, teacher2Id)

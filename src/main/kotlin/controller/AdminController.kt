@@ -13,6 +13,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -50,7 +51,11 @@ class AdminController(
                 }
                 post("api/admin/create_retake") {
                     call.requireRole(UserRole.ADMIN)
+                    // val rawBody = call.receiveText()
+                    // Raw request body: {"startAt":"2026-05-06T05:45:00","endAt":"2026-05-28T02:12:00","teacherIds":[3],"subjectId":3,"type":"Зачёт","place":"HI","admission":"Testfffff"}
+                    // println("Raw request body: $rawBody") // Логируем
                     val request = call.receive<CreateRetakeRequestDto>()
+                    println(request)
                     val retake = createRetakeUseCase(
                             startAtIso = request.startAt,
                             endAtIso = request.endAt,

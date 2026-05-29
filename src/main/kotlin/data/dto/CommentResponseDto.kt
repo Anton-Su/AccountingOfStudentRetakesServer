@@ -7,11 +7,15 @@ import kotlinx.serialization.Serializable
 data class CommentResponseDto(
     val id: Long,
     val studentId: Long,
+    val studentFullName: String,
+    val subjectTitle: String,
     val gradeplace: Int,
     val gradeteacher: Int,
     val gradeoverall: Int,
-    val comment: String? = null,
-    val retakeId: Long
+    val comment: String?,
+    val retakeId: Long,
+    val retakeStartAt: String,
+    val retakeEndAt: String,
 )
 
 fun Comment.toDto(): CommentResponseDto = CommentResponseDto(
@@ -21,5 +25,9 @@ fun Comment.toDto(): CommentResponseDto = CommentResponseDto(
     gradeteacher = gradeteacher,
     gradeoverall = gradeoverall,
     comment = comment,
-    retakeId = retakeId
+    retakeId = retakeId,
+    retakeStartAt = retakeStartAt,
+    retakeEndAt = retakeEndAt,
+    studentFullName = studentFullName,
+    subjectTitle = subjectTitle,
 )

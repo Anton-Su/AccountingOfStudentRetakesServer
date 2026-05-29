@@ -1,9 +1,10 @@
 package data.databases
 
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 
 object TeacherDisciplinesTable : Table("teacher_disciplines") {
-    val teacherId = reference("teacher_id", TeachersTable)
+    val teacherId = reference("teacher_id", TeachersTable, onDelete = ReferenceOption.CASCADE)
     val discipline = varchar("discipline", 128)
     init { uniqueIndex(teacherId, discipline) }
     override val primaryKey = PrimaryKey(teacherId, discipline)

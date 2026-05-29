@@ -6,6 +6,7 @@ import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
 import data.databases.StudentSubjectsTable
 import data.databases.SubjectsTable
+import data.databases.UsersTable
 import domain.model.Comment
 import domain.model.Retake
 import domain.model.RetakeEnrollment
@@ -108,21 +109,32 @@ class StudentRepositoryImpl : StudentRepository {
         comment: String?,
         retakeId: Long
     ): Comment = transaction {
+        val id = CommentsTable.insertAndGetId {
+            it[CommentsTable.studentId] = studentId
+            it[CommentsTable.gradeplace] = gradeplace
+            it[CommentsTable.gradeteacher] = gradeteacher
+            it[CommentsTable.gradeoverall] = gradeoverall
+            it[CommentsTable.comment] = comment
+            it[CommentsTable.retakeId] = retakeId
+        }.value
+        val user = UsersTable.selectAll()
+            .first { it[UsersTable.id].value == studentId }
+        val retake = RetakesTable.selectAll()
+            .first { it[RetakesTable.id].value == retakeId }
+        val subject = SubjectsTable.selectAll()
+            .first { it[SubjectsTable.id].value == retake[RetakesTable.subjectId].value }
         Comment(
-            id = CommentsTable.insertAndGetId {
-                it[CommentsTable.studentId] = studentId
-                it[CommentsTable.gradeplace] = gradeplace
-                it[CommentsTable.gradeteacher] = gradeteacher
-                it[CommentsTable.gradeoverall] = gradeoverall
-                it[CommentsTable.comment] = comment
-                it[CommentsTable.retakeId] = retakeId
-            }.value,
+            id = id,
             studentId = studentId,
+            studentFullName = "${user[UsersTable.secondName]} ${user[UsersTable.firstName]} ${user[UsersTable.lastName]}",
             gradeplace = gradeplace,
             gradeteacher = gradeteacher,
             gradeoverall = gradeoverall,
             comment = comment,
-            retakeId = retakeId
+            retakeId = retakeId,
+            retakeStartAt = Instant.ofEpochMilli(retake[RetakesTable.startAt]).toString(),
+            retakeEndAt = Instant.ofEpochMilli(retake[RetakesTable.endAt]).toString(),
+            subjectTitle = subject[SubjectsTable.title],
         )
     }
 
