@@ -5,6 +5,7 @@ import data.databases.RetakeEnrollmentsTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
 import data.databases.StudentSubjectsTable
+import data.databases.StudentsTable
 import data.databases.SubjectsTable
 import data.databases.UsersTable
 import domain.model.Comment
@@ -125,6 +126,8 @@ class StudentRepositoryImpl : StudentRepository {
         }.value
         val user = UsersTable.selectAll()
             .first { it[UsersTable.id].value == studentId }
+        val student = StudentsTable.selectAll()
+            .first { it[StudentsTable.id].value == studentId }
         val retake = RetakesTable.selectAll()
             .first { it[RetakesTable.id].value == retakeId }
         val subject = SubjectsTable.selectAll()
@@ -133,6 +136,7 @@ class StudentRepositoryImpl : StudentRepository {
             id = id,
             studentId = studentId,
             studentFullName = "${user[UsersTable.secondName]} ${user[UsersTable.firstName]} ${user[UsersTable.lastName]}",
+            groupName = student[StudentsTable.groupName],
             gradeplace = gradeplace,
             gradeteacher = gradeteacher,
             gradeoverall = gradeoverall,

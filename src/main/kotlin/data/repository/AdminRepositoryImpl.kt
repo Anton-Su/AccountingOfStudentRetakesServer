@@ -5,6 +5,7 @@ import data.databases.RetakeEnrollmentsTable
 import data.databases.TeacherDisciplinesTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
+import data.databases.StudentsTable
 import data.databases.SubjectsTable
 import data.databases.UsersTable
 import domain.model.Comment
@@ -105,6 +106,7 @@ class AdminRepositoryImpl : AdminRepository {
     override suspend fun getAllComments(): List<Comment> = transaction {
         CommentsTable
             .join(UsersTable, JoinType.INNER, CommentsTable.studentId, UsersTable.id)
+            .join(StudentsTable, JoinType.INNER, CommentsTable.studentId, StudentsTable.id)
             .join(RetakesTable, JoinType.INNER, CommentsTable.retakeId, RetakesTable.id)
             .join(SubjectsTable, JoinType.INNER, RetakesTable.subjectId, SubjectsTable.id)
             .selectAll()
@@ -113,6 +115,7 @@ class AdminRepositoryImpl : AdminRepository {
                     id = it[CommentsTable.id].value,
                     studentId = it[CommentsTable.studentId].value,
                     studentFullName = "${it[UsersTable.secondName]} ${it[UsersTable.firstName]} ${it[UsersTable.lastName]}",
+                    groupName = it[StudentsTable.groupName],
                     gradeplace = it[CommentsTable.gradeplace],
                     gradeteacher = it[CommentsTable.gradeteacher],
                     gradeoverall = it[CommentsTable.gradeoverall],

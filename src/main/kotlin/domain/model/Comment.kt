@@ -4,6 +4,7 @@ data class Comment(
     val id: Long,
     val studentId: Long,
     val studentFullName: String,
+    val groupName: String,
     val subjectTitle: String,
     val gradeplace: Int,
     val gradeteacher: Int,
