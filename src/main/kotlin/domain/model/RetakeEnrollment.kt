@@ -6,4 +6,5 @@ data class RetakeEnrollment(
     val studentId: Long,
     val studentSubjectId: Long,
     val studentFullName: String,
+    val groupName: String,
 )

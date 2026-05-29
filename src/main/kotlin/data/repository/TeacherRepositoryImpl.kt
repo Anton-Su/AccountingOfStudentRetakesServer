@@ -6,6 +6,8 @@ import data.databases.RetakeEnrollmentsTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
 import data.databases.StudentSubjectsTable
+import data.databases.StudentsTable
+import data.databases.StudentsTable.groupName
 import data.databases.UsersTable
 import domain.model.Retake
 import domain.model.RetakeEnrollment
@@ -34,6 +36,7 @@ class TeacherRepositoryImpl : TeacherRepository {
         RetakeEnrollmentsTable
             .join(StudentSubjectsTable, JoinType.INNER, RetakeEnrollmentsTable.studentSubjectId, StudentSubjectsTable.id)
             .join(UsersTable, JoinType.INNER, StudentSubjectsTable.studentId, UsersTable.id)
+            .join(StudentsTable, JoinType.INNER, StudentSubjectsTable.studentId, StudentsTable.id)
             .selectAll()
             .where { RetakeEnrollmentsTable.retakeId eq retakeId }
             .map {
@@ -43,6 +46,7 @@ class TeacherRepositoryImpl : TeacherRepository {
                     studentId = it[StudentSubjectsTable.studentId].value,
                     studentSubjectId = it[RetakeEnrollmentsTable.studentSubjectId].value,
                     studentFullName = "${it[UsersTable.secondName]} ${it[UsersTable.firstName]} ${it[UsersTable.lastName]}",
+                    groupName = it[StudentsTable.groupName],
                 )
             }
     }
@@ -79,6 +83,7 @@ class TeacherRepositoryImpl : TeacherRepository {
             studentId = studentId,
             studentSubjectId = studentSubjectId,
             studentFullName = "Test",
+            groupName = "Test",
         )
     }
 
