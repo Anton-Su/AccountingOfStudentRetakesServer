@@ -101,7 +101,7 @@ class AdminController(
                 get("api/admin/retakes") {
                     call.requireRole(UserRole.ADMIN)
                     val retakes = getAllRetakesUseCase()
-                    call.respond(retakes.map { it.toRetakeDetailDto() })
+                    call.respond(retakes.map { it.toRetakeDto() })
                 }
 
                 get("api/admin/comments") {

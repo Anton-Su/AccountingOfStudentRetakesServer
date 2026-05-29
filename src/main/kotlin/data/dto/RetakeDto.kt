@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import domain.model.Retake
 
 @Serializable
-data class RetakeDetailDto(
+data class RetakeDto(
     val id: Long,
     val type: String,
     val place: String,
@@ -16,7 +16,7 @@ data class RetakeDetailDto(
     val subjectId: Long
 )
 
-fun Retake.toRetakeDetailDto(): RetakeDetailDto = RetakeDetailDto(
+fun Retake.toRetakeDto(): RetakeDto = RetakeDto(
     id = this.id,
     type = this.type,
     place = this.place,

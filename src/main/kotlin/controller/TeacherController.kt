@@ -41,7 +41,7 @@ class TeacherController(
                     )
                     val teacherId = user.id
                     val retakes = getTeacherRetakesUseCase(teacherId)
-                    call.respond(retakes.map { it.toRetakeDetailDto() })
+                    call.respond(retakes.map { it.toRetakeDto() })
                 }
                 get("api/teacher/retake/{retakeId}") {
                     call.requireRole(UserRole.TEACHER)
@@ -60,8 +60,8 @@ class TeacherController(
                         return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You don't have access to this retake"))
                     }
                     call.respond(
-                        RetakeDetailsResponse(
-                            retake = details.retake.toRetakeDetailDto(),
+                        RetakeDetailsDto(
+                            retake = details.retake.toRetakeDto(),
                             enrollments = details.enrollments.map { it.toEnrollmentDto() }
                         )
                     )

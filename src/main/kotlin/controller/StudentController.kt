@@ -80,6 +80,21 @@ class StudentController(
                     val result = getStudentDebtRankUseCase(studentId)
                     call.respond(result.toDto())
                 }
+//                get("api/student/{studentId}/retakes/available") {
+//                    call.requireRole(UserRole.STUDENT)
+//                    val studentId = call.pathStudentId() ?: return@get
+//                    if (!call.requireOwnStudent(studentId)) return@get
+//                    val retakes = getAvailableRetakesUseCase(studentId)
+//                    call.respond(retakes.map { it.toDto() })
+//                }
+//
+//                get("api/student/{studentId}/retakes/enrolled") {
+//                    call.requireRole(UserRole.STUDENT)
+//                    val studentId = call.pathStudentId() ?: return@get
+//                    if (!call.requireOwnStudent(studentId)) return@get
+//                    val retakes = getEnrolledRetakesUseCase(studentId)
+//                    call.respond(retakes.map { it.toDto() })
+//                }
             }
         }
     }
