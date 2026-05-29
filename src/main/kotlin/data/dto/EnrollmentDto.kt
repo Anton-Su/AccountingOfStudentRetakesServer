@@ -9,6 +9,7 @@ data class EnrollmentDto(
     val retakeId: Long,
     val studentId: Long,
     val studentSubjectId: Long,
+    val studentFullName: String,
 )
 
 fun RetakeEnrollment.toEnrollmentDto(): EnrollmentDto = EnrollmentDto(
@@ -16,4 +17,5 @@ fun RetakeEnrollment.toEnrollmentDto(): EnrollmentDto = EnrollmentDto(
     retakeId = this.retakeId,
     studentId = this.studentId,
     studentSubjectId = this.studentSubjectId,
+    studentFullName = this.studentFullName
 )
