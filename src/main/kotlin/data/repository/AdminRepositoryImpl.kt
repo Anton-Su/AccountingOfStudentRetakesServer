@@ -34,7 +34,15 @@ class AdminRepositoryImpl : AdminRepository {
             val disciplines = TeacherDisciplinesTable.selectAll()
                 .filter { it[TeacherDisciplinesTable.teacherId].value == teacherId }
                 .map { it[TeacherDisciplinesTable.discipline] }
-            if (disciplines.isEmpty()) null else Teacher(userId = teacherId, disciplines = disciplines)
+            if (disciplines.isEmpty()) return@mapNotNull null
+            val user = UsersTable.selectAll()
+                .firstOrNull { it[UsersTable.id].value == teacherId }
+                ?: return@mapNotNull null
+            Teacher(
+                userId = teacherId,
+                fullName = "${user[UsersTable.secondName]} ${user[UsersTable.firstName]} ${user[UsersTable.lastName]}",
+                disciplines = disciplines
+            )
         }
     }
 
