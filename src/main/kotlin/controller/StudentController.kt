@@ -6,6 +6,8 @@ import domain.repository.UserRepository
 import domain.usecases.CancelRetakeEnrollmentUseCase
 import domain.usecases.CreateCommentUseCase
 import domain.usecases.EnrollToRetakeUseCase
+import domain.usecases.GetAvailableRetakesUseCase
+import domain.usecases.GetEnrolledRetakesUseCase
 import domain.usecases.GetStudentDebtRankUseCase
 import domain.usecases.GetStudentDebtsUseCase
 import io.ktor.http.HttpStatusCode
@@ -13,6 +15,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -27,7 +30,9 @@ class StudentController(
     private val enrollToRetakeUseCase: EnrollToRetakeUseCase,
     private val cancelRetakeEnrollmentUseCase: CancelRetakeEnrollmentUseCase,
     private val createCommentUseCase: CreateCommentUseCase,
-    private val getStudentDebtRankUseCase: GetStudentDebtRankUseCase
+    private val getStudentDebtRankUseCase: GetStudentDebtRankUseCase,
+    private val getAvailableRetakesUseCase: GetAvailableRetakesUseCase,
+    private val getEnrolledRetakesUseCase: GetEnrolledRetakesUseCase
 ) {
     fun configure(application: Application) {
         application.routing {
@@ -47,6 +52,9 @@ class StudentController(
                     val retakeId = call.longPathParam("retakeId") ?: return@post
                     call.respond(enrollToRetakeUseCase(studentId, debtId, retakeId))
                 }
+                // val rawBody = call.receiveText()
+                // Raw request body: {"startAt":"2026-05-06T05:45:00","endAt":"2026-05-28T02:12:00","teacherIds":[3],"subjectId":3,"type":"Зачёт","place":"HI","admission":"Testfffff"}
+                // println("Raw request body: $rawBody") // Логируем
                 delete("api/student/{studentId}/debts/{debtId}/retakes/{retakeId}") {
                     call.requireRole(UserRole.STUDENT)
                     val studentId = call.pathStudentId() ?: return@delete
@@ -80,21 +88,20 @@ class StudentController(
                     val result = getStudentDebtRankUseCase(studentId)
                     call.respond(result.toDto())
                 }
-//                get("api/student/{studentId}/retakes/available") {
-//                    call.requireRole(UserRole.STUDENT)
-//                    val studentId = call.pathStudentId() ?: return@get
-//                    if (!call.requireOwnStudent(studentId)) return@get
-//                    val retakes = getAvailableRetakesUseCase(studentId)
-//                    call.respond(retakes.map { it.toDto() })
-//                }
-//
-//                get("api/student/{studentId}/retakes/enrolled") {
-//                    call.requireRole(UserRole.STUDENT)
-//                    val studentId = call.pathStudentId() ?: return@get
-//                    if (!call.requireOwnStudent(studentId)) return@get
-//                    val retakes = getEnrolledRetakesUseCase(studentId)
-//                    call.respond(retakes.map { it.toDto() })
-//                }
+                get("api/student/{studentId}/retakes/available") {
+                    call.requireRole(UserRole.STUDENT)
+                    val studentId = call.pathStudentId() ?: return@get
+                    if (!call.requireOwnStudent(studentId)) return@get
+                    val retakes = getAvailableRetakesUseCase(studentId)
+                    call.respond(retakes.map { it.toRetakeDto() })
+                }
+                get("api/student/{studentId}/retakes/enrolled") {
+                    call.requireRole(UserRole.STUDENT)
+                    val studentId = call.pathStudentId() ?: return@get
+                    if (!call.requireOwnStudent(studentId)) return@get
+                    val retakes = getEnrolledRetakesUseCase(studentId)
+                    call.respond(retakes.map { it.toRetakeDto() })
+                }
             }
         }
     }

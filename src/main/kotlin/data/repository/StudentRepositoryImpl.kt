@@ -73,30 +73,37 @@ class StudentRepositoryImpl : StudentRepository {
             it[RetakeEnrollmentsTable.studentSubjectId] = studentSubjectId
             it[RetakeEnrollmentsTable.enrolledAt] = Instant.now().toEpochMilli()
         }
-
-
         true
     }
 
     override suspend fun cancelRetakeEnrollment(studentId: Long, debtId: Long, retakeId: Long): Boolean = transaction {
+        println(123)
         val studentSubject = StudentSubjectsTable
             .selectAll()
             .firstOrNull {
                 it[StudentSubjectsTable.studentId].value == studentId &&
                         it[StudentSubjectsTable.subjectId].value == debtId
             } ?: throw IllegalArgumentException("Student subject not found")
+        println(345)
+        print(studentSubject)
         val studentSubjectId = studentSubject[StudentSubjectsTable.id].value
+        println(studentSubjectId)
+        println(567)
         val exists = RetakeEnrollmentsTable.selectAll().any {
             it[RetakeEnrollmentsTable.studentSubjectId].value == studentSubjectId &&
                     it[RetakeEnrollmentsTable.retakeId].value == retakeId
         }
+        print(exists)
+        println(87789)
         require(exists) {
             "Student is not enrolled to this retake"
         }
+        print(99999)
         RetakeEnrollmentsTable.deleteWhere {
             (RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId) and
                     (RetakeEnrollmentsTable.retakeId eq retakeId)
         }
+        print(1000000)
         true
     }
 
@@ -151,11 +158,53 @@ class StudentRepositoryImpl : StudentRepository {
             }
     }
 
+    override suspend fun findAvailableRetakes(studentId: Long): List<Retake> = transaction {
+        val debtSubjectIds = StudentSubjectsTable
+            .selectAll()
+            .where {
+                (StudentSubjectsTable.studentId eq studentId) and
+                        (StudentSubjectsTable.status eq StudentSubjectStatus.DEBT)
+            }
+            .map { it[StudentSubjectsTable.subjectId].value }
+        if (debtSubjectIds.isEmpty()) return@transaction emptyList()
+        val studentSubjectIds = StudentSubjectsTable
+            .selectAll()
+            .where { StudentSubjectsTable.studentId eq studentId }
+            .map { it[StudentSubjectsTable.id].value }
+        val enrolledRetakeIds = if (studentSubjectIds.isNotEmpty()) {
+            RetakeEnrollmentsTable
+                .selectAll()
+                .where { RetakeEnrollmentsTable.studentSubjectId inList studentSubjectIds }
+                .map { it[RetakeEnrollmentsTable.retakeId].value }
+        } else emptyList()
+        RetakesTable
+            .selectAll()
+            .where {
+                (RetakesTable.subjectId inList debtSubjectIds) and
+                        (RetakesTable.id notInList enrolledRetakeIds)
+            }
+            .map { it.toRetake() }
+    }
+
+    override suspend fun findEnrolledRetakes(studentId: Long): List<Retake> = transaction {
+        val studentSubjectIds = StudentSubjectsTable
+            .selectAll()
+            .where { StudentSubjectsTable.studentId eq studentId }
+            .map { it[StudentSubjectsTable.id].value }
+        if (studentSubjectIds.isEmpty()) return@transaction emptyList()
+        val enrolledRetakeIds = RetakeEnrollmentsTable
+            .selectAll()
+            .where { RetakeEnrollmentsTable.studentSubjectId inList studentSubjectIds }
+            .map { it[RetakeEnrollmentsTable.retakeId].value }
+        if (enrolledRetakeIds.isEmpty()) return@transaction emptyList()
+        RetakesTable
+            .selectAll()
+            .where { RetakesTable.id inList enrolledRetakeIds }
+            .map { it.toRetake() }
+    }
+
     private fun findRetakeByIdInternal(retakeId: Long): Retake? =
         RetakesTable.selectAll().firstOrNull { it[RetakesTable.id].value == retakeId }?.toRetake()
-
-    private fun findStudentSubjectRow(studentSubjectId: Long): ResultRow? =
-        StudentSubjectsTable.selectAll().firstOrNull { it[StudentSubjectsTable.id].value == studentSubjectId }
 
 
     private fun ResultRow.toSubject(): Subject = Subject(

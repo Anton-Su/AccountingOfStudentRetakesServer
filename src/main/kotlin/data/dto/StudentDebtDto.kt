@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 data class StudentDebtDto(
     val id: Long,
     val subjectTitle: String,
+    val subjectId: Long,
 )
 
 
@@ -14,5 +15,6 @@ fun StudentDebt.toDto(): StudentDebtDto {
     return StudentDebtDto(
         id = this.id,
         subjectTitle = this.subjectTitle,
+        subjectId = this.subjectId,
     )
 }

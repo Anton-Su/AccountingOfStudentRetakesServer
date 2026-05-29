@@ -51,9 +51,6 @@ class AdminController(
                 }
                 post("api/admin/create_retake") {
                     call.requireRole(UserRole.ADMIN)
-                    // val rawBody = call.receiveText()
-                    // Raw request body: {"startAt":"2026-05-06T05:45:00","endAt":"2026-05-28T02:12:00","teacherIds":[3],"subjectId":3,"type":"Зачёт","place":"HI","admission":"Testfffff"}
-                    // println("Raw request body: $rawBody") // Логируем
                     val request = call.receive<CreateRetakeRequestDto>()
                     println(request)
                     val retake = createRetakeUseCase(

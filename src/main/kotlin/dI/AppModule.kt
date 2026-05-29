@@ -26,6 +26,8 @@ import domain.usecases.CreateCommentUseCase
 import domain.usecases.DeleteRetakeUseCase
 import domain.usecases.GetAllCommentsUseCase
 import domain.usecases.GetAllRetakesUseCase
+import domain.usecases.GetAvailableRetakesUseCase
+import domain.usecases.GetEnrolledRetakesUseCase
 import domain.usecases.GetStudentDebtRankUseCase
 import domain.usecases.RedactRetakeUseCase
 import domain.usecases.GetSubjectsUseCase
@@ -43,6 +45,8 @@ object AppContainer {
     val getStudentDebtRankUseCase: GetStudentDebtRankUseCase by lazy { GetStudentDebtRankUseCase(studentRepository) }
     val enrollToRetakeUseCase: EnrollToRetakeUseCase by lazy { EnrollToRetakeUseCase(studentRepository) }
     val cancelRetakeEnrollmentUseCase: CancelRetakeEnrollmentUseCase by lazy { CancelRetakeEnrollmentUseCase(studentRepository) }
+    val getAvailableRetakesUseCase: GetAvailableRetakesUseCase by lazy { GetAvailableRetakesUseCase(studentRepository) }
+    val getEnrolledRetakesUseCase: GetEnrolledRetakesUseCase by lazy { GetEnrolledRetakesUseCase(studentRepository) }
     val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase by lazy {
         GetTeachersByDisciplineUseCase(adminRepository)
     }
@@ -58,7 +62,16 @@ object AppContainer {
     val authController: AuthController by lazy { AuthController(loginUseCase) }
     val userController: UserController by lazy { UserController(userRepository) }
     val studentController: StudentController by lazy {
-        StudentController(userRepository, getStudentDebtsUseCase, enrollToRetakeUseCase, cancelRetakeEnrollmentUseCase, createCommentUseCase, getStudentDebtRankUseCase)
+        StudentController(
+            userRepository,
+            getStudentDebtsUseCase,
+            enrollToRetakeUseCase,
+            cancelRetakeEnrollmentUseCase,
+            createCommentUseCase,
+            getStudentDebtRankUseCase,
+            getAvailableRetakesUseCase,
+            getEnrolledRetakesUseCase
+        )
     }
     val adminController: AdminController by lazy {
         AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase, getAllRetakesUseCase, deleteRetakeUseCase)
