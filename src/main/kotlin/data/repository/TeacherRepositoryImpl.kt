@@ -65,6 +65,10 @@ class TeacherRepositoryImpl : TeacherRepository {
             )
         val studentSubjectId = enrollmentRow[RetakeEnrollmentsTable.studentSubjectId].value
         val now = Instant.now().toEpochMilli()
+        val user = UsersTable.selectAll()
+            .first { it[UsersTable.id].value == studentId }
+        val student = StudentsTable.selectAll()
+            .first { it[StudentsTable.id].value == studentId }
         GradesTable.insert {
             it[GradesTable.retakeId] = retakeId
             it[GradesTable.studentSubjectId] = studentSubjectId
@@ -82,8 +86,8 @@ class TeacherRepositoryImpl : TeacherRepository {
             retakeId = retakeId,
             studentId = studentId,
             studentSubjectId = studentSubjectId,
-            studentFullName = "Test",
-            groupName = "Test",
+            studentFullName = "${user[UsersTable.secondName]} ${user[UsersTable.firstName]} ${user[UsersTable.lastName]}",
+            groupName = student[StudentsTable.groupName],
         )
     }
 
