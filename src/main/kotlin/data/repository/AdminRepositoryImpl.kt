@@ -1,7 +1,6 @@
 package data.repository
 
 import data.databases.CommentsTable
-import data.databases.RetakeEnrollmentsTable
 import data.databases.TeacherDisciplinesTable
 import data.databases.RetakeTeachersTable
 import data.databases.RetakesTable
@@ -19,7 +18,6 @@ import domain.model.Teacher
 import domain.repository.AdminRepository
 import helpers.fetchTeacherIds
 import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -31,11 +29,10 @@ import java.time.Instant
 
 class AdminRepositoryImpl : AdminRepository {
     override suspend fun findTeachersByDiscipline(discipline: String): List<Teacher> = transaction {
-        val normalized = discipline.trim().lowercase()
         val teacherRows = TeacherDisciplinesTable
             .join(UsersTable, JoinType.INNER, TeacherDisciplinesTable.teacherId, UsersTable.id)
             .selectAll()
-            .where { TeacherDisciplinesTable.discipline eq normalized }
+            .where { TeacherDisciplinesTable.discipline eq discipline }
             .groupBy { it[TeacherDisciplinesTable.teacherId].value }
         val teacherIds = teacherRows.keys.toList()
         val allDisciplines = TeacherDisciplinesTable.selectAll()

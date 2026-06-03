@@ -24,6 +24,7 @@ class AdminController(
     fun configure(route: Route) {
         route.get("/teachers") {
             val discipline = call.request.queryParameters["discipline"] ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Query parameter 'discipline' is required"))
+            println(discipline)
             val teachers = getTeachersByDisciplineUseCase(discipline)
             call.respond(teachers.map { it.toTeacherDto() })
         }
