@@ -11,7 +11,7 @@ class UserController(
     private val userRepository: UserRepository
 ) {
     fun configure(route: Route) {
-        route.get("/users/me") {
+        route.get("/me") {
             val email = call.currentEmail() ?: return@get call.respond(HttpStatusCode.Unauthorized)
             val user = userRepository.findByEmail(email) ?: return@get call.respond(HttpStatusCode.NotFound)
             call.respond(user.toUserDto())

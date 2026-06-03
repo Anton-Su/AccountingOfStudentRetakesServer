@@ -136,17 +136,27 @@ class StudentRepositoryImpl : StudentRepository {
                 .where { RetakeEnrollmentsTable.studentSubjectId inList studentSubjectIds }
                 .map { it[RetakeEnrollmentsTable.retakeId].value }
         } else emptyList()
-        val allTeacherIds = RetakeTeachersTable.selectAll()
+        val availableRetakeIds = RetakesTable
+            .selectAll()
+            .where {
+                (RetakesTable.subjectId inList debtSubjectIds) and (RetakesTable.id notInList enrolledRetakeIds) and
+                        (RetakesTable.startAt greater System.currentTimeMillis())
+            }
+            .map { it[RetakesTable.id].value}
+        if (availableRetakeIds.isEmpty()) return@transaction emptyList()
+        val teacherIds = RetakeTeachersTable
+            .selectAll()
+            .where { RetakeTeachersTable.retakeId inList availableRetakeIds }
             .groupBy(
                 { it[RetakeTeachersTable.retakeId].value },
                 { it[RetakeTeachersTable.teacherId].value }
             )
         RetakesTable
             .selectAll()
-            .where { (RetakesTable.subjectId inList debtSubjectIds) and (RetakesTable.id notInList enrolledRetakeIds) }
+            .where { RetakesTable.id inList availableRetakeIds }
             .map { row ->
                 val retakeId = row[RetakesTable.id].value
-                row.toRetake(allTeacherIds[retakeId] ?: emptyList())
+                row.toRetake(teacherIds[retakeId] ?: emptyList())
             }
     }
 
@@ -161,7 +171,9 @@ class StudentRepositoryImpl : StudentRepository {
             .where { RetakeEnrollmentsTable.studentSubjectId inList studentSubjectIds }
             .map { it[RetakeEnrollmentsTable.retakeId].value }
         if (enrolledRetakeIds.isEmpty()) return@transaction emptyList()
-        val allTeacherIds = RetakeTeachersTable.selectAll()
+        val teacherIds = RetakeTeachersTable
+            .selectAll()
+            .where { RetakeTeachersTable.retakeId inList enrolledRetakeIds }
             .groupBy(
                 { it[RetakeTeachersTable.retakeId].value },
                 { it[RetakeTeachersTable.teacherId].value }
@@ -171,7 +183,7 @@ class StudentRepositoryImpl : StudentRepository {
             .where { RetakesTable.id inList enrolledRetakeIds }
             .map { row ->
                 val retakeId = row[RetakesTable.id].value
-                row.toRetake(allTeacherIds[retakeId] ?: emptyList())
+                row.toRetake(teacherIds[retakeId] ?: emptyList())
             }
     }
 }
