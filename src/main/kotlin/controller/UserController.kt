@@ -11,8 +11,7 @@ class UserController(
 ) {
     fun configure(route: Route) {
         route.get("/me") {
-            val user = userRepository.getUser(call)
-                ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not found"))
+            val user = userRepository.getUser(call) ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not found"))
             call.respond(user.toUserDto())
         }
     }

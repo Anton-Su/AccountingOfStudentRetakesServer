@@ -4,5 +4,5 @@ import domain.model.UserRole
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LoginRequestDto(val email: String, val password: String, val role: UserRole)
+data class LoginRequestDto(val email: String, val password: String)
 

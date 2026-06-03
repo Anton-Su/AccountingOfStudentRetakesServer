@@ -1,4 +1,4 @@
-package security
+package helpers
 
 import domain.model.UserRole
 import io.ktor.server.application.ApplicationCall
@@ -14,3 +14,6 @@ fun ApplicationCall.requireRole(vararg allowedRoles: UserRole): UserRole {
         throw ForbiddenException("Insufficient permissions for this resource")
     return role
 }
+
+
+class ForbiddenException(message: String) : RuntimeException(message) // кастомное исключение (перехвачено в pluginsStatusPages)

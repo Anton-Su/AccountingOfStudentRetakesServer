@@ -47,9 +47,7 @@ object AppContainer {
     val cancelRetakeEnrollmentUseCase: CancelRetakeEnrollmentUseCase by lazy { CancelRetakeEnrollmentUseCase(studentRepository) }
     val getAvailableRetakesUseCase: GetAvailableRetakesUseCase by lazy { GetAvailableRetakesUseCase(studentRepository) }
     val getEnrolledRetakesUseCase: GetEnrolledRetakesUseCase by lazy { GetEnrolledRetakesUseCase(studentRepository) }
-    val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase by lazy {
-        GetTeachersByDisciplineUseCase(adminRepository)
-    }
+    val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase by lazy { GetTeachersByDisciplineUseCase(adminRepository) }
     val getAllRetakesUseCase: GetAllRetakesUseCase by lazy { GetAllRetakesUseCase(adminRepository) }
     val getAllCommentsUseCase: GetAllCommentsUseCase by lazy {GetAllCommentsUseCase(adminRepository)}
     val deleteRetakeUseCase: DeleteRetakeUseCase by lazy { DeleteRetakeUseCase(adminRepository)}
@@ -61,24 +59,9 @@ object AppContainer {
     val redactRetakeUseCase: RedactRetakeUseCase by lazy { RedactRetakeUseCase(adminRepository) }
     val authController: AuthController by lazy { AuthController(loginUseCase) }
     val userController: UserController by lazy { UserController(userRepository) }
-    val studentController: StudentController by lazy {
-        StudentController(
-            userRepository,
-            getStudentDebtsUseCase,
-            enrollToRetakeUseCase,
-            cancelRetakeEnrollmentUseCase,
-            createCommentUseCase,
-            getStudentDebtRankUseCase,
-            getAvailableRetakesUseCase,
-            getEnrolledRetakesUseCase
-        )
-    }
-    val adminController: AdminController by lazy {
-        AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase, getAllRetakesUseCase, deleteRetakeUseCase)
-    }
-    val teacherController: TeacherController by lazy {
-        TeacherController(userRepository, studentRepository, getTeacherRetakesUseCase, getRetakeDetailsUseCase, gradeStudentUseCase)
-    }
+    val studentController: StudentController by lazy { StudentController(getStudentDebtsUseCase, enrollToRetakeUseCase, cancelRetakeEnrollmentUseCase, createCommentUseCase, getStudentDebtRankUseCase, getAvailableRetakesUseCase, getEnrolledRetakesUseCase) }
+    val adminController: AdminController by lazy { AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase, getAllRetakesUseCase, deleteRetakeUseCase) }
+    val teacherController: TeacherController by lazy { TeacherController(userRepository, studentRepository, getTeacherRetakesUseCase, getRetakeDetailsUseCase, gradeStudentUseCase) }
 }
 
 fun appModule() {

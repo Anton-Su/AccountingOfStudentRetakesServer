@@ -3,6 +3,7 @@ import domain.model.UserRole
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.routing.*
+import plugins.ownStudentPlugin
 import plugins.rolePlugin
 
 fun Application.configureRouting() {
@@ -22,6 +23,7 @@ fun Application.configureRouting() {
                 }
                 route("/student"){
                     install(rolePlugin(UserRole.STUDENT))
+                    install(ownStudentPlugin())
                     AppContainer.studentController.configure(this)
                 }
                 route("/teacher"){

@@ -78,33 +78,26 @@ class StudentRepositoryImpl : StudentRepository {
     }
 
     override suspend fun cancelRetakeEnrollment(studentId: Long, debtId: Long, retakeId: Long): Boolean = transaction {
-        println(123)
         val studentSubject = StudentSubjectsTable
             .selectAll()
             .firstOrNull {
                 it[StudentSubjectsTable.studentId].value == studentId &&
                         it[StudentSubjectsTable.subjectId].value == debtId
             } ?: throw IllegalArgumentException("Student subject not found")
-        println(345)
         print(studentSubject)
         val studentSubjectId = studentSubject[StudentSubjectsTable.id].value
         println(studentSubjectId)
-        println(567)
         val exists = RetakeEnrollmentsTable.selectAll().any {
             it[RetakeEnrollmentsTable.studentSubjectId].value == studentSubjectId &&
                     it[RetakeEnrollmentsTable.retakeId].value == retakeId
         }
-        print(exists)
-        println(87789)
         require(exists) {
             "Student is not enrolled to this retake"
         }
-        print(99999)
         RetakeEnrollmentsTable.deleteWhere {
             (RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId) and
                     (RetakeEnrollmentsTable.retakeId eq retakeId)
         }
-        print(1000000)
         true
     }
 

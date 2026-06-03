@@ -1,6 +1,6 @@
 package plugins
 
-import security.ForbiddenException
+import helpers.ForbiddenException
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ContentTransformationException

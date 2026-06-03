@@ -7,7 +7,7 @@ import io.ktor.server.application.ApplicationCall
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import security.currentEmail
+import helpers.currentEmail
 
 class UserRepositoryImpl : UserRepository {
     override suspend fun findByEmail(email: String): User? {
