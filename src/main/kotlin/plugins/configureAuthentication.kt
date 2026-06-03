@@ -19,6 +19,10 @@ fun Application.configureAuthentication() {
                 val now = System.currentTimeMillis()
                 val expired = exp < now
                 val validRole = roleClaim?.isNotBlank() == true
+                println("email: $email")
+                println("role: $roleClaim")
+                println("expired: $expired")
+                println("validRole: $validRole")
                 if (email != null && validRole && !expired) {
                     JWTPrincipal(credential.payload)
                 } else {
