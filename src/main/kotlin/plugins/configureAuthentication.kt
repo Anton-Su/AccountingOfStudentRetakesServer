@@ -7,17 +7,13 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
+import security.JwtConfig
 
 fun Application.configureAuthentication() {
     install(Authentication) {
         jwt("auth-jwt") {
             realm = "ktor-app"
-            verifier(
-                JWT.require(Algorithm.HMAC256("a8fK2mP9xQ4vN7tY1wZ6rL3cHs8uJ5dE"))
-                    .withAudience("mobile-app")
-                    .withIssuer("ktor-app")
-                    .build()
-            )
+            verifier(JwtConfig.verifier)
             validate { credential ->
                 val email = credential.payload.getClaim("email").asString()
                 val roleClaim = credential.payload.getClaim("role").asString()

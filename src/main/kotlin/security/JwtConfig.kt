@@ -10,6 +10,7 @@ object JwtConfig {
     private const val ISSUER = "ktor-app"
     private const val AUDIENCE = "mobile-app"
     private const val VALIDITY = 14L * 24 * 60 * 60 * 1000 // 14
+
     val verifier: JWTVerifier = JWT
         .require(Algorithm.HMAC256(SECRET))
         .withAudience(AUDIENCE)
