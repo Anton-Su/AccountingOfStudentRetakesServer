@@ -9,10 +9,3 @@ data class TeacherDto(
     val fullName: String,
     val disciplines: List<String>
 )
-
-
-fun Teacher.toTeacherDto() = TeacherDto(
-    userId = this.userId,
-    fullName = this.fullName,
-    disciplines = this.disciplines
-)

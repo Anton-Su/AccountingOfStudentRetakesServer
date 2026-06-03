@@ -3,7 +3,7 @@ package data.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CreateRetakeRequestDto(
+data class CreateRetakeRequest(
 	val startAt: String,
 	val endAt: String,
 	val teacherIds: List<Long>,

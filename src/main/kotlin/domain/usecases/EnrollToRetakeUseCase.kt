@@ -1,6 +1,5 @@
 package domain.usecases
 
-import domain.model.StudentDebt
 import domain.repository.StudentRepository
 
 class EnrollToRetakeUseCase(

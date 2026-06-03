@@ -1,9 +1,8 @@
 package domain.usecases
 
-import domain.model.UserRole
+import domain.repository.UserRepository
 import security.JwtConfig
 import security.PasswordHasher
-import domain.repository.UserRepository
 
 class LoginUseCase(
     private val userRepository: UserRepository,

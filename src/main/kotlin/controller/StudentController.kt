@@ -1,8 +1,10 @@
 package controller
 
-import data.dto.CreateCommentRequestDto
-import data.dto.toDto
-import data.dto.toRetakeDto
+import data.dto.CreateCommentRequest
+import domain.model.mappers.toCommentDto
+import domain.model.mappers.toRetakeDto
+import domain.model.mappers.toStudentDebtDto
+import domain.model.mappers.toStudentDebtRankDto
 import domain.usecases.*
 import helpers.longPathParam
 import io.ktor.http.*
@@ -24,7 +26,7 @@ class StudentController(
             get("/debts") {
                 val studentId = call.parameters["studentId"]!!.toLong()
                 val debts = getStudentDebtsUseCase(studentId)
-                call.respond(debts.map { it.toDto() })
+                call.respond(debts.map { it.toStudentDebtDto() })
             }
             post("/debts/{debtId}/retakes/{retakeId}") {
                 val studentId = call.parameters["studentId"]!!.toLong()
@@ -43,14 +45,14 @@ class StudentController(
             }
             post("/comments") {
                 val studentId = call.parameters["studentId"]!!.toLong()
-                val request = call.receive<CreateCommentRequestDto>()
-                val created = createCommentUseCase(studentId = studentId, gradeplace = request.gradeplace, gradeteacher = request.gradeteacher, gradeoverall = request.gradeoverall, comment = request.comment, retakeId = request.retakeId,)
-                call.respond(HttpStatusCode.Created, created.toDto())
+                val request = call.receive<CreateCommentRequest>()
+                val created = createCommentUseCase(studentId = studentId, gradePlace = request.gradePlace, gradeTeacher = request.gradeTeacher, gradeOverall = request.gradeOverall, comment = request.comment, retakeId = request.retakeId,)
+                call.respond(HttpStatusCode.Created, created.toCommentDto())
             }
             get("/debts/rank") {
                 val studentId = call.parameters["studentId"]!!.toLong()
                 val result = getStudentDebtRankUseCase(studentId)
-                call.respond(result.toDto())
+                call.respond(result.toStudentDebtRankDto())
             }
             get("/retakes/available") {
                 val studentId = call.parameters["studentId"]!!.toLong()

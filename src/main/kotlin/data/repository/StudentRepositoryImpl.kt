@@ -8,15 +8,21 @@ import data.databases.StudentSubjectsTable
 import data.databases.StudentsTable
 import data.databases.SubjectsTable
 import data.databases.UsersTable
+import data.mappers.toComment
+import data.mappers.toRetake
+import data.mappers.toStudentDebt
+import data.mappers.toSubject
 import domain.model.Comment
 import domain.model.Retake
 import domain.model.StudentDebt
 import domain.model.StudentSubjectStatus
 import domain.model.Subject
 import domain.repository.StudentRepository
+import helpers.fetchTeacherIds
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -28,47 +34,41 @@ class StudentRepositoryImpl : StudentRepository {
     override suspend fun findDebtsByStudentId(studentId: Long) = transaction {
         (StudentSubjectsTable innerJoin SubjectsTable)
             .selectAll()
-            .where {
-                (StudentSubjectsTable.studentId eq studentId) and
-                        (StudentSubjectsTable.status eq StudentSubjectStatus.DEBT)
+            .where { (StudentSubjectsTable.studentId eq studentId) and
+                    (StudentSubjectsTable.status eq StudentSubjectStatus.DEBT)
             }
-            .map { row ->
-                StudentDebt(
-                    id = row[StudentSubjectsTable.id].value,
-                    subjectId = row[StudentSubjectsTable.subjectId].value,
-                    subjectTitle = row[SubjectsTable.title]
-                )
+            .map {
+                it.toStudentDebt()
             }
     }
 
     override suspend fun findSubjectById(subjectId: Long): Subject? = transaction {
         SubjectsTable.selectAll()
-            .firstOrNull { it[SubjectsTable.id].value == subjectId }
+            .where { SubjectsTable.id eq subjectId }
+            .firstOrNull()
             ?.toSubject()
     }
 
     override suspend fun findRetakeById(retakeId: Long): Retake? = transaction {
         RetakesTable.selectAll()
-            .firstOrNull { it[RetakesTable.id].value == retakeId }
-            ?.toRetake()
+            .where { RetakesTable.id eq retakeId }
+            .firstOrNull()
+            ?.toRetake(fetchTeacherIds(retakeId))
     }
 
     override suspend fun enrollToRetake(studentId: Long, debtId: Long, retakeId: Long): Boolean = transaction {
         val studentSubject = StudentSubjectsTable
             .selectAll()
-            .firstOrNull {
-                it[StudentSubjectsTable.studentId].value == studentId &&
-                        it[StudentSubjectsTable.subjectId].value == debtId
-            } ?: throw IllegalArgumentException("Student subject not found")
+            .where { (StudentSubjectsTable.studentId eq studentId) and (StudentSubjectsTable.subjectId eq debtId) }
+            .firstOrNull() ?: throw IllegalArgumentException("Student subject not found")
         val studentSubjectId = studentSubject[StudentSubjectsTable.id].value
-        val retake = findRetakeByIdInternal(retakeId)
+        val retake = RetakesTable.selectAll()
+            .where { RetakesTable.id eq retakeId }
+            .firstOrNull()
+            ?.toRetake(fetchTeacherIds(retakeId))
             ?: throw IllegalArgumentException("Retake with id $retakeId not found")
-        require(retake.subjectId == debtId) {
-            "Retake subject does not match debt subject"
-        }
-        RetakeEnrollmentsTable.deleteWhere {
-            RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId
-        }
+        require(retake.subjectId == debtId) { "Retake subject does not match debt subject" }
+        RetakeEnrollmentsTable.deleteWhere { RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId }
         RetakeEnrollmentsTable.insert {
             it[RetakeEnrollmentsTable.retakeId] = retakeId
             it[RetakeEnrollmentsTable.studentSubjectId] = studentSubjectId
@@ -80,35 +80,19 @@ class StudentRepositoryImpl : StudentRepository {
     override suspend fun cancelRetakeEnrollment(studentId: Long, debtId: Long, retakeId: Long): Boolean = transaction {
         val studentSubject = StudentSubjectsTable
             .selectAll()
-            .firstOrNull {
-                it[StudentSubjectsTable.studentId].value == studentId &&
-                        it[StudentSubjectsTable.subjectId].value == debtId
-            } ?: throw IllegalArgumentException("Student subject not found")
-        print(studentSubject)
+            .where { (StudentSubjectsTable.studentId eq studentId) and (StudentSubjectsTable.subjectId eq debtId) }
+            .firstOrNull() ?: throw IllegalArgumentException("Student subject not found")
         val studentSubjectId = studentSubject[StudentSubjectsTable.id].value
-        println(studentSubjectId)
-        val exists = RetakeEnrollmentsTable.selectAll().any {
-            it[RetakeEnrollmentsTable.studentSubjectId].value == studentSubjectId &&
-                    it[RetakeEnrollmentsTable.retakeId].value == retakeId
-        }
-        require(exists) {
-            "Student is not enrolled to this retake"
-        }
-        RetakeEnrollmentsTable.deleteWhere {
-            (RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId) and
-                    (RetakeEnrollmentsTable.retakeId eq retakeId)
-        }
+        val exists = RetakeEnrollmentsTable
+            .selectAll()
+            .where { (RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId) and (RetakeEnrollmentsTable.retakeId eq retakeId) }
+            .any()
+        require(exists) { "Student is not enrolled to this retake" }
+        RetakeEnrollmentsTable.deleteWhere { (RetakeEnrollmentsTable.studentSubjectId eq studentSubjectId) and (RetakeEnrollmentsTable.retakeId eq retakeId) }
         true
     }
 
-    override suspend fun createComment(
-        studentId: Long,
-        gradeplace: Int,
-        gradeteacher: Int,
-        gradeoverall: Int,
-        comment: String?,
-        retakeId: Long
-    ): Comment = transaction {
+    override suspend fun createComment(studentId: Long, gradeplace: Int, gradeteacher: Int, gradeoverall: Int, comment: String?, retakeId: Long): Comment = transaction {
         val id = CommentsTable.insertAndGetId {
             it[CommentsTable.studentId] = studentId
             it[CommentsTable.gradeplace] = gradeplace
@@ -117,51 +101,29 @@ class StudentRepositoryImpl : StudentRepository {
             it[CommentsTable.comment] = comment
             it[CommentsTable.retakeId] = retakeId
         }.value
-        val user = UsersTable.selectAll()
-            .first { it[UsersTable.id].value == studentId }
-        val student = StudentsTable.selectAll()
-            .first { it[StudentsTable.id].value == studentId }
-        val retake = RetakesTable.selectAll()
-            .first { it[RetakesTable.id].value == retakeId }
-        val subject = SubjectsTable.selectAll()
-            .first { it[SubjectsTable.id].value == retake[RetakesTable.subjectId].value }
-        Comment(
-            id = id,
-            studentId = studentId,
-            studentFullName = "${user[UsersTable.secondName]} ${user[UsersTable.firstName]} ${user[UsersTable.lastName]}",
-            groupName = student[StudentsTable.groupName],
-            gradeplace = gradeplace,
-            gradeteacher = gradeteacher,
-            gradeoverall = gradeoverall,
-            comment = comment,
-            retakeId = retakeId,
-            retakeStartAt = Instant.ofEpochMilli(retake[RetakesTable.startAt]).toString(),
-            retakeEndAt = Instant.ofEpochMilli(retake[RetakesTable.endAt]).toString(),
-            subjectTitle = subject[SubjectsTable.title],
-        )
+        (CommentsTable
+                innerJoin UsersTable
+                innerJoin StudentsTable
+                innerJoin RetakesTable
+                innerJoin SubjectsTable)
+            .selectAll()
+            .where { CommentsTable.id eq id }
+            .single()
+            .toComment()
     }
 
     override suspend fun getStudentsDebtCounts(): List<Pair<Long, Int>> = transaction {
         StudentSubjectsTable
-            .selectAll()
-            .where {
-                StudentSubjectsTable.status eq StudentSubjectStatus.DEBT
-            }
-            .groupBy { row ->
-                row[StudentSubjectsTable.studentId].value
-            }
-            .map { (studentId, rows) ->
-                studentId to rows.size
-            }
+            .select(StudentSubjectsTable.studentId, StudentSubjectsTable.id.count())
+            .where { StudentSubjectsTable.status eq StudentSubjectStatus.DEBT }
+            .groupBy(StudentSubjectsTable.studentId)
+            .map { it[StudentSubjectsTable.studentId].value to it[StudentSubjectsTable.id.count()].toInt() }
     }
 
     override suspend fun findAvailableRetakes(studentId: Long): List<Retake> = transaction {
         val debtSubjectIds = StudentSubjectsTable
             .selectAll()
-            .where {
-                (StudentSubjectsTable.studentId eq studentId) and
-                        (StudentSubjectsTable.status eq StudentSubjectStatus.DEBT)
-            }
+            .where { (StudentSubjectsTable.studentId eq studentId) and (StudentSubjectsTable.status eq StudentSubjectStatus.DEBT) }
             .map { it[StudentSubjectsTable.subjectId].value }
         if (debtSubjectIds.isEmpty()) return@transaction emptyList()
         val studentSubjectIds = StudentSubjectsTable
@@ -174,13 +136,18 @@ class StudentRepositoryImpl : StudentRepository {
                 .where { RetakeEnrollmentsTable.studentSubjectId inList studentSubjectIds }
                 .map { it[RetakeEnrollmentsTable.retakeId].value }
         } else emptyList()
+        val allTeacherIds = RetakeTeachersTable.selectAll()
+            .groupBy(
+                { it[RetakeTeachersTable.retakeId].value },
+                { it[RetakeTeachersTable.teacherId].value }
+            )
         RetakesTable
             .selectAll()
-            .where {
-                (RetakesTable.subjectId inList debtSubjectIds) and
-                        (RetakesTable.id notInList enrolledRetakeIds)
+            .where { (RetakesTable.subjectId inList debtSubjectIds) and (RetakesTable.id notInList enrolledRetakeIds) }
+            .map { row ->
+                val retakeId = row[RetakesTable.id].value
+                row.toRetake(allTeacherIds[retakeId] ?: emptyList())
             }
-            .map { it.toRetake() }
     }
 
     override suspend fun findEnrolledRetakes(studentId: Long): List<Retake> = transaction {
@@ -194,37 +161,17 @@ class StudentRepositoryImpl : StudentRepository {
             .where { RetakeEnrollmentsTable.studentSubjectId inList studentSubjectIds }
             .map { it[RetakeEnrollmentsTable.retakeId].value }
         if (enrolledRetakeIds.isEmpty()) return@transaction emptyList()
+        val allTeacherIds = RetakeTeachersTable.selectAll()
+            .groupBy(
+                { it[RetakeTeachersTable.retakeId].value },
+                { it[RetakeTeachersTable.teacherId].value }
+            )
         RetakesTable
             .selectAll()
             .where { RetakesTable.id inList enrolledRetakeIds }
-            .map { it.toRetake() }
+            .map { row ->
+                val retakeId = row[RetakesTable.id].value
+                row.toRetake(allTeacherIds[retakeId] ?: emptyList())
+            }
     }
-
-    private fun findRetakeByIdInternal(retakeId: Long): Retake? =
-        RetakesTable.selectAll().firstOrNull { it[RetakesTable.id].value == retakeId }?.toRetake()
-
-
-    private fun ResultRow.toSubject(): Subject = Subject(
-        id = this[SubjectsTable.id].value,
-        title = this[SubjectsTable.title]
-    )
-
-    private fun ResultRow.toRetake(): Retake {
-        val retakeId = this[RetakesTable.id].value
-        val teacherIds = RetakeTeachersTable.selectAll()
-            .filter { it[RetakeTeachersTable.retakeId].value == retakeId }
-            .map { it[RetakeTeachersTable.teacherId].value}
-        return Retake(
-            id = retakeId,
-            type = this[RetakesTable.type],
-            place = this[RetakesTable.place],
-            admission = this[RetakesTable.admission],
-            subjectId = this[RetakesTable.subjectId].value,
-            startAt = Instant.ofEpochMilli(this[RetakesTable.startAt]),
-            endAt = Instant.ofEpochMilli(this[RetakesTable.endAt]),
-            lastModified = Instant.ofEpochMilli(this[RetakesTable.lastModified]),
-            teacherIds = teacherIds
-        )
-    }
-
 }

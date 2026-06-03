@@ -1,6 +1,5 @@
 package domain.repository
 
-import data.dto.SubjectDto
 import domain.model.Comment
 import domain.model.Retake
 import domain.model.Subject

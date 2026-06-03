@@ -3,7 +3,8 @@ package data.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SubjectDto(
-    val id: Long,
-    val title: String
+data class LoginRequest(
+    val email: String,
+    val password: String
 )
+

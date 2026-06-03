@@ -1,6 +1,5 @@
 package data.dto
 
-import domain.model.StudentDebt
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,12 +8,3 @@ data class StudentDebtDto(
     val subjectTitle: String,
     val subjectId: Long,
 )
-
-
-fun StudentDebt.toDto(): StudentDebtDto {
-    return StudentDebtDto(
-        id = this.id,
-        subjectTitle = this.subjectTitle,
-        subjectId = this.subjectId,
-    )
-}

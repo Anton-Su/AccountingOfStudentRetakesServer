@@ -3,10 +3,10 @@ package data.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CreateCommentRequestDto(
-    val gradeplace: Int,
-    val gradeteacher: Int,
-    val gradeoverall: Int,
+data class CreateCommentRequest(
+    val gradePlace: Int,
+    val gradeTeacher: Int,
+    val gradeOverall: Int,
     val comment: String? = null,
     val retakeId: Long,
 )

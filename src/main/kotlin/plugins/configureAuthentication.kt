@@ -1,8 +1,6 @@
 package plugins
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -21,7 +19,6 @@ fun Application.configureAuthentication() {
                 val now = System.currentTimeMillis()
                 val expired = exp < now
                 val validRole = roleClaim?.isNotBlank() == true
-
                 if (email != null && validRole && !expired) {
                     JWTPrincipal(credential.payload)
                 } else {

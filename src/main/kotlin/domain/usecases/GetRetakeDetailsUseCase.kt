@@ -11,8 +11,7 @@ class GetRetakeDetailsUseCase(
 ) {
     suspend operator fun invoke(retakeId: Long): RetakeDetails {
         require(retakeId > 0) { "Retake ID must be positive" }
-        val retake = studentRepository.findRetakeById(retakeId)
-            ?: throw IllegalArgumentException("Retake with id $retakeId not found")
+        val retake = studentRepository.findRetakeById(retakeId) ?: throw IllegalArgumentException("Retake with id $retakeId not found")
         val enrollments = teacherRepository.findEnrollmentsByRetakeId(retakeId)
         return RetakeDetails(retake, enrollments)
     }

@@ -2,6 +2,7 @@ package domain.usecases
 
 import domain.model.StudentDebtRank
 import domain.repository.StudentRepository
+import kotlin.math.roundToInt
 
 class GetStudentDebtRankUseCase(
     private val studentRepository: StudentRepository
@@ -9,17 +10,8 @@ class GetStudentDebtRankUseCase(
     suspend operator fun invoke(studentId: Long): StudentDebtRank {
         val studentsDebts = studentRepository.getStudentsDebtCounts().sortedBy { it.second }
         val totalStudents = studentsDebts.size
-        if (totalStudents == 0) {
-            return StudentDebtRank(
-                studentId = studentId,
-                debtsCount = 0,
-                place = 0,
-                totalStudents = totalStudents,
-                topPercent = 100
-            )
-        }
         val studentIndex = studentsDebts.indexOfFirst { it.first == studentId }
-        if (studentIndex == -1) {
+        if (totalStudents == 0 || studentIndex == -1) {
             return StudentDebtRank(
                 studentId = studentId,
                 debtsCount = 0,
@@ -30,7 +22,7 @@ class GetStudentDebtRankUseCase(
         }
         val place = studentIndex + 1
         val debtsCount = studentsDebts[studentIndex].second
-        val topPercent = (((totalStudents - place).toDouble() / totalStudents) * 100).toInt()
+        val topPercent = (((totalStudents - place).toDouble() / totalStudents) * 100).roundToInt()
         return StudentDebtRank(
             studentId = studentId,
             debtsCount = debtsCount,

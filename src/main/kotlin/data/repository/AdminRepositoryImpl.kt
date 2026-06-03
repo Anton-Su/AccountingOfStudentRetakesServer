@@ -8,11 +8,16 @@ import data.databases.RetakesTable
 import data.databases.StudentsTable
 import data.databases.SubjectsTable
 import data.databases.UsersTable
+import data.mappers.toComment
+import data.mappers.toRetake
+import data.mappers.toSubject
+import data.mappers.toTeacher
 import domain.model.Comment
 import domain.model.Retake
 import domain.model.Subject
 import domain.model.Teacher
 import domain.repository.AdminRepository
+import helpers.fetchTeacherIds
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -27,38 +32,26 @@ import java.time.Instant
 class AdminRepositoryImpl : AdminRepository {
     override suspend fun findTeachersByDiscipline(discipline: String): List<Teacher> = transaction {
         val normalized = discipline.trim().lowercase()
-        val teacherIds = TeacherDisciplinesTable.selectAll()
-            .filter { it[TeacherDisciplinesTable.discipline].trim().lowercase() == normalized }
-            .map { it[TeacherDisciplinesTable.teacherId].value }
-            .distinct()
-        teacherIds.mapNotNull { teacherId ->
-            val disciplines = TeacherDisciplinesTable.selectAll()
-                .filter { it[TeacherDisciplinesTable.teacherId].value == teacherId }
-                .map { it[TeacherDisciplinesTable.discipline] }
-            if (disciplines.isEmpty()) return@mapNotNull null
-            val user = UsersTable.selectAll()
-                .firstOrNull { it[UsersTable.id].value == teacherId }
-                ?: return@mapNotNull null
-            Teacher(
-                userId = teacherId,
-                fullName = "${user[UsersTable.secondName]} ${user[UsersTable.firstName]} ${user[UsersTable.lastName]}",
-                disciplines = disciplines
+        val teacherRows = TeacherDisciplinesTable
+            .join(UsersTable, JoinType.INNER, TeacherDisciplinesTable.teacherId, UsersTable.id)
+            .selectAll()
+            .where { TeacherDisciplinesTable.discipline eq normalized }
+            .groupBy { it[TeacherDisciplinesTable.teacherId].value }
+        val teacherIds = teacherRows.keys.toList()
+        val allDisciplines = TeacherDisciplinesTable.selectAll()
+            .where { TeacherDisciplinesTable.teacherId inList teacherIds }
+            .groupBy(
+                { it[TeacherDisciplinesTable.teacherId].value },
+                { it[TeacherDisciplinesTable.discipline] }
             )
+        teacherRows.map { (teacherId, rows) ->
+            rows.first().toTeacher(allDisciplines[teacherId] ?: emptyList())
         }
     }
 
-
-
     override suspend fun findAllSubjects(): List<Subject> = transaction {
-        SubjectsTable.selectAll()
-            .map {
-                Subject(
-                    id = it[SubjectsTable.id].value,
-                    title = it[SubjectsTable.title]
-                )
-            }
+        SubjectsTable.selectAll().map { it.toSubject() }
     }
-
 
     override suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?, subjectId: Long): Retake = transaction {
         val normalizedTeacherIds = teacherIds.distinct()
@@ -111,20 +104,7 @@ class AdminRepositoryImpl : AdminRepository {
             .join(SubjectsTable, JoinType.INNER, RetakesTable.subjectId, SubjectsTable.id)
             .selectAll()
             .map {
-                Comment(
-                    id = it[CommentsTable.id].value,
-                    studentId = it[CommentsTable.studentId].value,
-                    studentFullName = "${it[UsersTable.secondName]} ${it[UsersTable.firstName]} ${it[UsersTable.lastName]}",
-                    groupName = it[StudentsTable.groupName],
-                    gradeplace = it[CommentsTable.gradeplace],
-                    gradeteacher = it[CommentsTable.gradeteacher],
-                    gradeoverall = it[CommentsTable.gradeoverall],
-                    comment = it[CommentsTable.comment],
-                    retakeId = it[CommentsTable.retakeId].value,
-                    retakeStartAt = Instant.ofEpochMilli(it[RetakesTable.startAt]).toString(),
-                    retakeEndAt = Instant.ofEpochMilli(it[RetakesTable.endAt]).toString(),
-                    subjectTitle = it[SubjectsTable.title],
-                )
+                it.toComment()
             }
     }
 
@@ -141,29 +121,14 @@ class AdminRepositoryImpl : AdminRepository {
     }
 
     override suspend fun deleteRetake(id: Long): Unit = transaction {
-        // RetakeEnrollmentsTable.deleteWhere { RetakeEnrollmentsTable.retakeId eq id }
-        // RetakeTeachersTable.deleteWhere { RetakeTeachersTable.retakeId eq id }
         val deleted = RetakesTable.deleteWhere { RetakesTable.id eq id }
         if (deleted == 0) throw IllegalArgumentException("Retake with id $id not found")
     }
 
     private fun loadRetake(retakeId: Long): Retake {
-        val row = RetakesTable.selectAll().first { it[RetakesTable.id].value == retakeId }
-        val teacherIds = RetakeTeachersTable.selectAll()
-            .filter { it[RetakeTeachersTable.retakeId].value == retakeId }
-            .map { it[RetakeTeachersTable.teacherId].value } // .value вернуть
-        return row.toRetake(teacherIds)
+        val row = RetakesTable.selectAll()
+            .where { RetakesTable.id eq retakeId }
+            .first()
+        return row.toRetake(fetchTeacherIds(retakeId))
     }
-
-    private fun ResultRow.toRetake(teacherIds: List<Long>): Retake = Retake(
-        id = this[RetakesTable.id].value,
-        type = this[RetakesTable.type],
-        place = this[RetakesTable.place],
-        subjectId = this[RetakesTable.subjectId].value,
-        admission = this[RetakesTable.admission],
-        startAt = Instant.ofEpochMilli(this[RetakesTable.startAt]),
-        endAt = Instant.ofEpochMilli(this[RetakesTable.endAt]),
-        lastModified = Instant.ofEpochMilli(this[RetakesTable.lastModified]),
-        teacherIds = teacherIds
-    )
 }

@@ -1,7 +1,6 @@
 package data.dto
 
 import kotlinx.serialization.Serializable
-import domain.model.Retake
 
 @Serializable
 data class RetakeDto(
@@ -14,16 +13,4 @@ data class RetakeDto(
     val teacherIds: List<Long>,
     val admission: String? = null,
     val subjectId: Long
-)
-
-fun Retake.toRetakeDto(): RetakeDto = RetakeDto(
-    id = this.id,
-    type = this.type,
-    place = this.place,
-    startAt = this.startAt.toString(),
-    endAt = this.endAt.toString(),
-    lastModified = this.lastModified.toString(),
-    teacherIds = this.teacherIds,
-    subjectId = this.subjectId,
-    admission = this.admission
 )

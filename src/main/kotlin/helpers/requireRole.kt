@@ -5,7 +5,6 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.principal
 import io.ktor.server.auth.jwt.JWTPrincipal
 
-
 fun ApplicationCall.requireRole(vararg allowedRoles: UserRole): UserRole {
     val principal = principal<JWTPrincipal>() ?: throw ForbiddenException("Failed to read user data from token")
     val roleClaim = principal.payload.getClaim("role").asString()?.trim().orEmpty()
@@ -14,6 +13,5 @@ fun ApplicationCall.requireRole(vararg allowedRoles: UserRole): UserRole {
         throw ForbiddenException("Insufficient permissions for this resource")
     return role
 }
-
 
 class ForbiddenException(message: String) : RuntimeException(message) // кастомное исключение (перехвачено в pluginsStatusPages)

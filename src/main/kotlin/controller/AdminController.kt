@@ -1,6 +1,10 @@
 package controller
 
 import data.dto.*
+import domain.model.mappers.toCommentDto
+import domain.model.mappers.toRetakeDto
+import domain.model.mappers.toSubjectDto
+import domain.model.mappers.toTeacherDto
 import domain.usecases.*
 import helpers.longPathParam
 import io.ktor.http.*
@@ -28,20 +32,20 @@ class AdminController(
             call.respond(subjects.map { it.toSubjectDto() })
         }
         route.post("/create_retake") {
-            val request = call.receive<CreateRetakeRequestDto>()
+            val request = call.receive<CreateRetakeRequest>()
             val retake = createRetakeUseCase(startAtIso = request.startAt, endAtIso = request.endAt,
                 teacherIds = request.teacherIds, subjectId = request.subjectId, type = request.type,
                 place = request.place, admission = request.admission
             )
-            call.respond(HttpStatusCode.Created, retake.toCreateRetakeResponseDto())
+            call.respond(HttpStatusCode.Created, retake.toRetakeDto())
         }
         route.put("/retakes/{id}") {
             val id = call.parameters["id"]?.toLongOrNull() ?: return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid id"))
-            val request = call.receive<CreateRetakeRequestDto>()
+            val request = call.receive<CreateRetakeRequest>()
             val updated = redactRetakeUseCase(id = id, startAtIso = request.startAt, endAtIso = request.endAt,
                 teacherIds = request.teacherIds, type = request.type, place = request.place,
                 admission = request.admission, subjectId = request.subjectId,)
-            call.respond(HttpStatusCode.OK, updated.toCreateRetakeResponseDto())
+            call.respond(HttpStatusCode.OK, updated.toRetakeDto())
         }
         route.delete("/retakes/{id}") {
             val id = call.longPathParam("id") ?: return@delete
@@ -54,7 +58,7 @@ class AdminController(
         }
         route.get("/comments") {
             val comments = getAllCommentsUseCase()
-            call.respond(comments.map { it.toDto() })
+            call.respond(comments.map { it.toCommentDto() })
         }
     }
 }

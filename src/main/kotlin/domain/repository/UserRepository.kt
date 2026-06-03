@@ -5,6 +5,5 @@ import io.ktor.server.application.ApplicationCall
 
 interface UserRepository {
     suspend fun findByEmail(email: String): User?
-    suspend fun findById(id: Int): User?
-    suspend fun getUser(call: ApplicationCall): User?
+    suspend fun findById(id: Long): User?
 }
