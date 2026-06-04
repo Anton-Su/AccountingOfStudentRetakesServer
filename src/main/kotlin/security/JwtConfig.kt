@@ -7,6 +7,7 @@ import java.util.Date
 
 object JwtConfig {
     private const val SECRET = "a8fK2mP9xQ4vN7tY1wZ6rL3cHs8uJ5dE"
+    // представим, что это переменная окружения
     private const val ISSUER = "ktor-app"
     private const val AUDIENCE = "mobile-app"
     private const val VALIDITY = 14L * 24 * 60 * 60 * 1000 // 14

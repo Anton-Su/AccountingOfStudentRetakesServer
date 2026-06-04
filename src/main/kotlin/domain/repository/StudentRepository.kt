@@ -13,7 +13,7 @@ interface StudentRepository {
     suspend fun findRetakeById(retakeId: Long): Retake?
     suspend fun enrollToRetake(studentId: Long, debtId: Long, retakeId: Long): Boolean
     suspend fun cancelRetakeEnrollment(studentId: Long, debtId: Long, retakeId: Long): Boolean
-    suspend fun createComment(studentId: Long, gradeplace: Int, gradeteacher: Int, gradeoverall: Int, comment: String?, retakeId: Long): Comment
+    suspend fun createComment(studentId: Long, gradePlace: Int, gradeTeacher: Int, gradeOverall: Int, comment: String?, retakeId: Long): Comment
     suspend fun getStudentsDebtCounts(): List<Pair<Long, Int>>
     suspend fun findAvailableRetakes(studentId: Long): List<Retake>
     suspend fun findEnrolledRetakes(studentId: Long): List<Retake>

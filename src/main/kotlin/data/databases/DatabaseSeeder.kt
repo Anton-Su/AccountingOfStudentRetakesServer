@@ -15,6 +15,7 @@ object DatabaseSeeder {
     private const val HOUR = 3_600_000L
     private const val DAY = 86_400_000L
 
+
     fun seed() {
         if (UsersTable.selectAll().any()) return
 
@@ -60,18 +61,18 @@ object DatabaseSeeder {
         insertStudentProfile(student5Id, "ИКБО-63-23")
 
         // ── Долги студентов ────────────────────────────────────────────────
-        // Максим: долги statehood, config; сдал mobile, db
-        val maximStatehoodId = insertStudentSubject(student1Id, statehoodSubjectId, StudentSubjectStatus.DEBT,   null, NOW - 30 * DAY)
-        val maximConfigId    = insertStudentSubject(student1Id, configSubjectId,    StudentSubjectStatus.DEBT,   null, NOW - 31 * DAY)
-        insertStudentSubject(student1Id, mobileSubjectId, StudentSubjectStatus.OK, 4, NOW - 60 * DAY)
-        insertStudentSubject(student1Id, dbSubjectId,     StudentSubjectStatus.OK, 5, NOW - 62 * DAY)
+        // Максим: долги statehood, config, mobile; сдал только db
+        val maximStatehoodId  = insertStudentSubject(student1Id, statehoodSubjectId, StudentSubjectStatus.DEBT, null, NOW - 30 * DAY)
+        val maximConfigId     = insertStudentSubject(student1Id, configSubjectId,    StudentSubjectStatus.DEBT, null, NOW - 31 * DAY)
+        val maximMobileDebtId = insertStudentSubject(student1Id, mobileSubjectId,    StudentSubjectStatus.DEBT, null, NOW - 5  * DAY)
+        insertStudentSubject(student1Id, dbSubjectId, StudentSubjectStatus.OK, 5, NOW - 62 * DAY)
 
         // Анна: долги operations, sysAdmin; сдала mobile
         val annaOperationsId = insertStudentSubject(student2Id, operationsSubjectId, StudentSubjectStatus.DEBT, null, NOW - 20 * DAY)
         val annaSysAdminId   = insertStudentSubject(student2Id, sysAdminSubjectId,   StudentSubjectStatus.DEBT, null, NOW - 21 * DAY)
         insertStudentSubject(student2Id, mobileSubjectId, StudentSubjectStatus.OK, 5, NOW - 50 * DAY)
 
-        // Кирилл: долг architecture, sysAdmin; сдал db
+        // Кирилл: долги architecture, sysAdmin; сдал db
         val kirillArchitectureId = insertStudentSubject(student3Id, architectureSubjectId, StudentSubjectStatus.DEBT, null, NOW - 15 * DAY)
         val kirillSysAdminId     = insertStudentSubject(student3Id, sysAdminSubjectId,     StudentSubjectStatus.DEBT, null, NOW - 16 * DAY)
         insertStudentSubject(student3Id, dbSubjectId, StudentSubjectStatus.OK, 3, NOW - 70 * DAY)
@@ -90,18 +91,18 @@ object DatabaseSeeder {
         // ПЕРЕСДАЧИ
         // ══════════════════════════════════════════════════════════════════
 
-        // ── ПРОШЕДШИЕ (для комментариев) ───────────────────────────────────
-        val pastRetake1Id = insertRetake(  // statehood — прошла 30 дней назад
+        // ── ПРОШЕДШИЕ (для комментариев) ──────────────────────────────────
+        val pastRetake1Id = insertRetake(
             type = "Экзамен", place = "Ауд. 101", admission = "40 баллов допуска",
             startAt = NOW - 30 * DAY, endAt = NOW - 30 * DAY + 2 * HOUR,
             subjectId = statehoodSubjectId.value
         )
-        val pastRetake2Id = insertRetake(  // operations — прошла 20 дней назад
+        val pastRetake2Id = insertRetake(
             type = "Зачёт", place = "Ауд. 212", admission = "Лабораторные должны быть сданы",
             startAt = NOW - 20 * DAY, endAt = NOW - 20 * DAY + 2 * HOUR,
             subjectId = operationsSubjectId.value
         )
-        val pastRetake3Id = insertRetake(  // db — прошла 10 дней назад
+        val pastRetake3Id = insertRetake(
             type = "Экзамен", place = "Ауд. 505", admission = "Минимум 30 баллов",
             startAt = NOW - 10 * DAY, endAt = NOW - 10 * DAY + 2 * HOUR,
             subjectId = dbSubjectId.value
@@ -111,38 +112,46 @@ object DatabaseSeeder {
         linkRetakeTeacher(pastRetake2Id, teacher3Id)
         linkRetakeTeacher(pastRetake3Id, teacher4Id)
 
+        // ── В ПРОЦЕССЕ (mobile — Максим записан, уже поставили 3) ─────────
+        val ongoingRetakeId = insertRetake(
+            type = "Экзамен", place = "Ауд. 202", admission = "Допуск свободный",
+            startAt = NOW - 1 * HOUR,
+            endAt   = NOW + 1 * HOUR,
+            subjectId = mobileSubjectId.value
+        )
+        linkRetakeTeacher(ongoingRetakeId, teacher1Id)
+
         // ── БУДУЩИЕ (открыты для записи) ──────────────────────────────────
-        val futureRetake1Id = insertRetake(  // config — через 7 дней
+        val futureRetake1Id = insertRetake(
             type = "Экзамен", place = "Ауд. 404", admission = "20 баллов допуска",
             startAt = NOW + 7 * DAY, endAt = NOW + 7 * DAY + 2 * HOUR,
             subjectId = configSubjectId.value
         )
-        val futureRetake2Id = insertRetake(  // sysAdmin — через 10 дней
+        val futureRetake2Id = insertRetake(
             type = "Зачёт", place = "Ауд. 303", admission = "Все лабораторные сданы",
             startAt = NOW + 10 * DAY, endAt = NOW + 10 * DAY + 2 * HOUR,
             subjectId = sysAdminSubjectId.value
         )
-        val futureRetake3Id = insertRetake(  // operations — через 14 дней
+        val futureRetake3Id = insertRetake(
             type = "Зачёт", place = "Ауд. 212", admission = "Лабораторные должны быть сданы",
             startAt = NOW + 14 * DAY, endAt = NOW + 14 * DAY + 2 * HOUR,
             subjectId = operationsSubjectId.value
         )
-        val futureRetake4Id = insertRetake(  // db — через 21 день
+        val futureRetake4Id = insertRetake(
             type = "Экзамен", place = "Ауд. 505", admission = "Минимум 30 баллов",
             startAt = NOW + 21 * DAY, endAt = NOW + 21 * DAY + 2 * HOUR,
             subjectId = dbSubjectId.value
         )
-        val futureRetake5Id = insertRetake(  // architecture — через 28 дней
+        val futureRetake5Id = insertRetake(
             type = "Экзамен", place = "Ауд. 108", admission = "Курсовая защищена",
             startAt = NOW + 28 * DAY, endAt = NOW + 28 * DAY + 2 * HOUR,
             subjectId = architectureSubjectId.value
         )
-        val futureRetake6Id = insertRetake(  // statehood — через 35 дней
+        val futureRetake6Id = insertRetake(
             type = "Экзамен", place = "Ауд. 101", admission = "40 баллов допуска",
             startAt = NOW + 35 * DAY, endAt = NOW + 35 * DAY + 2 * HOUR,
             subjectId = statehoodSubjectId.value
         )
-
         linkRetakeTeacher(futureRetake1Id, teacher1Id)
         linkRetakeTeacher(futureRetake2Id, teacher3Id)
         linkRetakeTeacher(futureRetake3Id, teacher3Id)
@@ -169,28 +178,26 @@ object DatabaseSeeder {
         insertGrade(pastRetake3Id, daniilDbId, score = 3, gradedAt = gradedAt3)
         updateStudentSubjectAfterGrade(daniilDbId, score = 3, updatedAt = gradedAt3)
 
+        // ── Запись и оценка текущей пересдачи (mobile, Максим) ────────────
+        insertEnrollment(ongoingRetakeId, maximMobileDebtId)
+        val gradedAtOngoing = NOW - 30 * 60 * 1000L
+        insertGrade(ongoingRetakeId, maximMobileDebtId, score = 3, gradedAt = gradedAtOngoing)
+        updateStudentSubjectAfterGrade(maximMobileDebtId, score = 3, updatedAt = gradedAtOngoing)
+
         // ── Записи на будущие пересдачи ───────────────────────────────────
-        // Максим записан на config (futureRetake1)
         insertEnrollment(futureRetake1Id, maximConfigId)
-        // Анна записана на sysAdmin (futureRetake2)
         insertEnrollment(futureRetake2Id, annaSysAdminId)
-        // Даниил записан на operations и config
         insertEnrollment(futureRetake3Id, daniilOperationsId)
         insertEnrollment(futureRetake1Id, daniilConfigId)
-        // Кирилл записан на architecture и sysAdmin
         insertEnrollment(futureRetake5Id, kirillArchitectureId)
         insertEnrollment(futureRetake2Id, kirillSysAdminId)
 
         // ══════════════════════════════════════════════════════════════════
         // КОММЕНТАРИИ к прошедшим пересдачам
         // ══════════════════════════════════════════════════════════════════
-
-        // pastRetake1 (statehood) — Максим получил 4
-        insertComment(studentId = student1Id, retakeId = pastRetake1Id, gradePlace = 4, gradeTeacher = 5, gradeOverall = 4, comment = "Хорошая атмосфера, преподаватель объяснял непонятные моменты. Вопросы были по билету, без сюрпризов.")
-        // pastRetake2 (operations) — Анна получила 5, Даниил не сдал (нет оценки — нет комментария от него, но Анна оставила)
-        insertComment(studentId = student2Id, retakeId = pastRetake2Id, gradePlace = 5, gradeTeacher = 5, gradeOverall = 5, comment = "Всё прошло отлично! Преподаватель была очень доброжелательна, задавала наводящие вопросы.")
-        // pastRetake3 (db) — Даниил получил 3
-        insertComment(studentId = student5Id, retakeId = pastRetake3Id, gradePlace = 3, gradeTeacher = 4, gradeOverall = 3, comment = "Аудитория маловата, душно. Преподаватель строгий, но справедливый. Лучше готовиться по индексам и транзакциям.")
+        insertComment(student1Id, pastRetake1Id, gradePlace = 8, gradeTeacher = 10, gradeOverall = 70, comment = "Хорошая атмосфера, преподаватель объяснял непонятные моменты. Вопросы были по билету, без сюрпризов.")
+        insertComment(student2Id, pastRetake2Id, gradePlace = 10, gradeTeacher = 10, gradeOverall = 100, comment = "Всё прошло отлично! Преподаватель была очень доброжелательна, задавала наводящие вопросы.")
+        insertComment(student5Id, pastRetake3Id, gradePlace = 3, gradeTeacher = 4, gradeOverall = 35, comment = "Аудитория маловата, душно. Преподаватель строгий, но справедливый. Лучше готовиться по индексам и транзакциям.")
     }
 
     private fun insertUser(role: UserRole, firstName: String, secondName: String, lastName: String, gender: String, age: Int, email: String, rawPassword: String): EntityID<Long> = UsersTable.insertAndGetId {

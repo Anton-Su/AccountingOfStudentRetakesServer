@@ -93,12 +93,12 @@ class StudentRepositoryImpl : StudentRepository {
         true
     }
 
-    override suspend fun createComment(studentId: Long, gradeplace: Int, gradeteacher: Int, gradeoverall: Int, comment: String?, retakeId: Long): Comment = transaction {
+    override suspend fun createComment(studentId: Long, gradePlace: Int, gradeTeacher: Int, gradeOverall: Int, comment: String?, retakeId: Long): Comment = transaction {
         val id = CommentsTable.insertAndGetId {
             it[CommentsTable.studentId] = studentId
-            it[CommentsTable.gradePlace] = gradeplace
-            it[CommentsTable.gradeTeacher] = gradeteacher
-            it[CommentsTable.gradeOverall] = gradeoverall
+            it[CommentsTable.gradePlace] = gradePlace
+            it[CommentsTable.gradeTeacher] = gradeTeacher
+            it[CommentsTable.gradeOverall] = gradeOverall
             it[CommentsTable.comment] = comment
             it[CommentsTable.retakeId] = retakeId
         }.value
