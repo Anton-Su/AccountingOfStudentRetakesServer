@@ -10,9 +10,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class AuthController(
-    private val loginUseCase: LoginUseCase
-) {
+class AuthController(private val loginUseCase: LoginUseCase) {
     fun configure(route: Route) {
         route.post("/login") {
             val request = call.receive<LoginRequest>()

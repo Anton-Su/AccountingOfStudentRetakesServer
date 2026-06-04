@@ -36,7 +36,7 @@ class StudentController(
             }
             // val rawBody = call.receiveText()
             // Raw request body: {"startAt":"2026-05-06T05:45:00","endAt":"2026-05-28T02:12:00","teacherIds":[3],"subjectId":3,"type":"Зачёт","place":"HI","admission":"Testfffff"}
-            // println("Raw request body: $rawBody") // Логируем
+            // println("Raw request body: $rawBody")
             delete("/debts/{debtId}/retakes/{retakeId}") {
                 val studentId = call.parameters["studentId"]!!.toLong()
                 val debtId = call.longPathParam("debtId") ?: return@delete

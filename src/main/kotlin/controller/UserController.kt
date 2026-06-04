@@ -7,9 +7,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-class UserController(
-    private val userRepository: UserRepository
-) {
+class UserController(private val userRepository: UserRepository) {
     fun configure(route: Route) {
         route.get("/me") {
             val email = call.currentEmail() ?: return@get call.respond(HttpStatusCode.Unauthorized)

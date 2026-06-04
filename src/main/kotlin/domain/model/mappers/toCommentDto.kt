@@ -6,9 +6,9 @@ import domain.model.Comment
 fun Comment.toCommentDto() = CommentDto(
     id = id,
     studentId = studentId,
-    gradeplace = gradeplace,
-    gradeteacher = gradeteacher,
-    gradeoverall = gradeoverall,
+    gradeplace = gradePlace,
+    gradeteacher = gradeTeacher,
+    gradeoverall = gradeOverall,
     comment = comment,
     retakeId = retakeId,
     retakeStartAt = retakeStartAt,

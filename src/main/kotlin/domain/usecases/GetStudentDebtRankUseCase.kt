@@ -4,9 +4,7 @@ import domain.model.StudentDebtRank
 import domain.repository.StudentRepository
 import kotlin.math.roundToInt
 
-class GetStudentDebtRankUseCase(
-    private val studentRepository: StudentRepository
-) {
+class GetStudentDebtRankUseCase(private val studentRepository: StudentRepository) {
     suspend operator fun invoke(studentId: Long): StudentDebtRank {
         val studentsDebts = studentRepository.getStudentsDebtCounts().sortedBy { it.second }
         val totalStudents = studentsDebts.size
@@ -17,7 +15,7 @@ class GetStudentDebtRankUseCase(
                 debtsCount = 0,
                 place = 0,
                 totalStudents = totalStudents,
-                topPercent = 100 // хардкорное значение добавлено
+                topPercent = 100 // без понятия, как регулировать, что у человека нет долгов, так что будет в абсолютном топе
             )
         }
         val place = studentIndex + 1

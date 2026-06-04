@@ -29,6 +29,7 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class StudentRepositoryImpl : StudentRepository {
     override suspend fun findDebtsByStudentId(studentId: Long) = transaction {
@@ -95,9 +96,9 @@ class StudentRepositoryImpl : StudentRepository {
     override suspend fun createComment(studentId: Long, gradeplace: Int, gradeteacher: Int, gradeoverall: Int, comment: String?, retakeId: Long): Comment = transaction {
         val id = CommentsTable.insertAndGetId {
             it[CommentsTable.studentId] = studentId
-            it[CommentsTable.gradeplace] = gradeplace
-            it[CommentsTable.gradeteacher] = gradeteacher
-            it[CommentsTable.gradeoverall] = gradeoverall
+            it[CommentsTable.gradePlace] = gradeplace
+            it[CommentsTable.gradeTeacher] = gradeteacher
+            it[CommentsTable.gradeOverall] = gradeoverall
             it[CommentsTable.comment] = comment
             it[CommentsTable.retakeId] = retakeId
         }.value
@@ -178,9 +179,10 @@ class StudentRepositoryImpl : StudentRepository {
                 { it[RetakeTeachersTable.retakeId].value },
                 { it[RetakeTeachersTable.teacherId].value }
             )
+        val oneDayAgo = Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli()
         RetakesTable
             .selectAll()
-            .where { RetakesTable.id inList enrolledRetakeIds }
+            .where { (RetakesTable.id inList enrolledRetakeIds) and (RetakesTable.endAt greaterEq oneDayAgo)  }
             .map { row ->
                 val retakeId = row[RetakesTable.id].value
                 row.toRetake(teacherIds[retakeId] ?: emptyList())

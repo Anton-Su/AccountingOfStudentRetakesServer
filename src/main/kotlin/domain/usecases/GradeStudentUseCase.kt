@@ -4,9 +4,7 @@ import domain.model.RetakeEnrollment
 import domain.repository.StudentRepository
 import domain.repository.TeacherRepository
 
-class GradeStudentUseCase(
-    private val teacherRepository: TeacherRepository
-) {
+class GradeStudentUseCase(private val teacherRepository: TeacherRepository) {
     suspend operator fun invoke(retakeId: Long, studentId: Long, type: String, score: Int): RetakeEnrollment {
         require(retakeId > 0) { "Retake ID must be positive" }
         require(studentId > 0) { "Student ID must be positive" }
