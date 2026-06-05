@@ -3,6 +3,7 @@ val logback_version: String by project
 
 plugins {
     kotlin("jvm") version "2.3.0"
+    application
     id("io.ktor.plugin") version "3.4.0"
     kotlin("plugin.serialization") version "2.2.10"
 }
@@ -13,6 +14,10 @@ version = "0.0.1"
 
 kotlin {
     jvmToolchain(21)
+}
+
+application {
+    mainClass.set("MainKt")
 }
 
 dependencies {
