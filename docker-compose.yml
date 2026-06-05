@@ -1,0 +1,9 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: accounting-app
+    restart: unless-stopped
+    ports:
+      - "8034:8080"

@@ -2,12 +2,16 @@ import dI.AppContainer
 import domain.model.UserRole
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import plugins.ownStudentPlugin
 import plugins.rolePlugin
 
 fun Application.configureRouting() {
     routing {
+        get("/ping") {
+            call.respondText("pong")
+        }
         route("/auth") {
             AppContainer.authController.configure(this)
         }
