@@ -46,7 +46,7 @@ class StudentController(
             post("/comments") {
                 val studentId = call.parameters["studentId"]!!.toLong()
                 val request = call.receive<CreateCommentRequest>()
-                val created = createCommentUseCase(studentId = studentId, gradePlace = request.gradePlace, gradeTeacher = request.gradeTeacher, gradeOverall = request.gradeOverall, comment = request.comment, retakeId = request.retakeId,)
+                val created = createCommentUseCase(studentId = studentId, gradePlace = request.gradePlace, gradeTeacher = request.gradeTeacher, gradeOverall = request.gradeOverall, comment = request.comment, retakeId = request.retakeId)
                 call.respond(HttpStatusCode.Created, created.toCommentDto())
             }
             get("/debts/rank") {

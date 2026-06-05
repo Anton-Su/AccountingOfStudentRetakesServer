@@ -19,13 +19,18 @@ import domain.model.StudentSubjectStatus
 import domain.model.Subject
 import domain.repository.StudentRepository
 import helpers.fetchTeacherIds
+
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
@@ -102,15 +107,16 @@ class StudentRepositoryImpl : StudentRepository {
             it[CommentsTable.comment] = comment
             it[CommentsTable.retakeId] = retakeId
         }.value
-        (CommentsTable
-                innerJoin UsersTable
-                innerJoin StudentsTable
-                innerJoin RetakesTable
-                innerJoin SubjectsTable)
+        val row = CommentsTable
+            .join(UsersTable, JoinType.INNER, CommentsTable.studentId, UsersTable.id)
+            .join(StudentsTable, JoinType.INNER, CommentsTable.studentId, StudentsTable.id)
+            .join(RetakesTable, JoinType.INNER, CommentsTable.retakeId, RetakesTable.id)
+            .join(SubjectsTable, JoinType.INNER, RetakesTable.subjectId, SubjectsTable.id)
             .selectAll()
             .where { CommentsTable.id eq id }
-            .single()
-            .toComment()
+            .firstOrNull()
+            ?: throw IllegalStateException("Comment with id $id not found after insert")
+        row.toComment()
     }
 
     override suspend fun getStudentsDebtCounts(): List<Pair<Long, Int>> = transaction {

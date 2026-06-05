@@ -32,6 +32,11 @@ object DatabaseSeeder {
 
         insertTeacherDiscipline(teacher1Id, "Конфигурационное управление")
         insertTeacherDiscipline(teacher1Id, "Мобильная разработка")
+        insertTeacherDiscipline(teacher1Id, "Основы российской государственности")
+        insertTeacherDiscipline(teacher1Id, "Системное администрирование")
+        insertTeacherDiscipline(teacher1Id, "Исследование операций")
+        insertTeacherDiscipline(teacher1Id, "Базы данных")
+        insertTeacherDiscipline(teacher1Id, "Архитектура программных систем")
         insertTeacherDiscipline(teacher2Id, "Основы российской государственности")
         insertTeacherDiscipline(teacher3Id, "Системное администрирование")
         insertTeacherDiscipline(teacher3Id, "Исследование операций")
@@ -94,7 +99,7 @@ object DatabaseSeeder {
         // ── ПРОШЕДШИЕ (для комментариев) ──────────────────────────────────
         val pastRetake1Id = insertRetake(
             type = "Экзамен", place = "Ауд. 101", admission = "40 баллов допуска",
-            startAt = NOW - 30 * DAY, endAt = NOW - 30 * DAY + 2 * HOUR,
+            startAt = NOW - 12 * HOUR, endAt = NOW - 10 * HOUR,
             subjectId = statehoodSubjectId.value
         )
         val pastRetake2Id = insertRetake(
@@ -166,7 +171,7 @@ object DatabaseSeeder {
         insertEnrollment(pastRetake3Id, daniilDbId)
 
         // ── Оценки по прошедшим пересдачам ────────────────────────────────
-        val gradedAt1 = NOW - 30 * DAY + 2 * HOUR
+        val gradedAt1 = NOW - 10 * HOUR
         insertGrade(pastRetake1Id, maximStatehoodId, score = 4, gradedAt = gradedAt1)
         updateStudentSubjectAfterGrade(maximStatehoodId, score = 4, updatedAt = gradedAt1)
 
@@ -178,11 +183,8 @@ object DatabaseSeeder {
         insertGrade(pastRetake3Id, daniilDbId, score = 3, gradedAt = gradedAt3)
         updateStudentSubjectAfterGrade(daniilDbId, score = 3, updatedAt = gradedAt3)
 
-        // ── Запись и оценка текущей пересдачи (mobile, Максим) ────────────
+        // ── Запись на пересдачу (mobile, Максим) ────────────
         insertEnrollment(ongoingRetakeId, maximMobileDebtId)
-        val gradedAtOngoing = NOW - 30 * 60 * 1000L
-        insertGrade(ongoingRetakeId, maximMobileDebtId, score = 3, gradedAt = gradedAtOngoing)
-        updateStudentSubjectAfterGrade(maximMobileDebtId, score = 3, updatedAt = gradedAtOngoing)
 
         // ── Записи на будущие пересдачи ───────────────────────────────────
         insertEnrollment(futureRetake1Id, maximConfigId)
