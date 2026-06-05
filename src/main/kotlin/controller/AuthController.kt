@@ -18,7 +18,7 @@ class AuthController(private val loginUseCase: LoginUseCase) {
             if (token != null) {
                 call.respond(Login(token).toLoginDto())
             } else {
-                println("[AUTH] Login failed for email: ${request.email}")
+                // println("[AUTH] Login failed for email: ${request.email}")
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid email or password"))
             }
         }

@@ -11,6 +11,9 @@ fun Application.configureRouting() {
         route("/auth") {
             AppContainer.authController.configure(this)
         }
+        route("/general") {
+            AppContainer.guestController.configure(this)
+        }
         authenticate("auth-jwt") {
             route("/api") {
                 route("/users"){

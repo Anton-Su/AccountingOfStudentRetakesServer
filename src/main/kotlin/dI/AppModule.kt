@@ -3,6 +3,7 @@ package dI
 import security.PasswordHasher
 import controller.AdminController
 import controller.AuthController
+import controller.GuestController
 import controller.UserController
 import controller.StudentController
 import controller.TeacherController
@@ -59,8 +60,9 @@ object AppContainer {
     val authController: AuthController by lazy { AuthController(loginUseCase) }
     val userController: UserController by lazy { UserController(userRepository) }
     val studentController: StudentController by lazy { StudentController(getStudentDebtsUseCase, enrollToRetakeUseCase, cancelRetakeEnrollmentUseCase, createCommentUseCase, getStudentDebtRankUseCase, getAvailableRetakesUseCase, getEnrolledRetakesUseCase) }
-    val adminController: AdminController by lazy { AdminController(getTeachersByDisciplineUseCase, getSubjectsUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase, getAllRetakesUseCase, deleteRetakeUseCase) }
+    val adminController: AdminController by lazy { AdminController(getTeachersByDisciplineUseCase, createRetakeUseCase, redactRetakeUseCase, getAllCommentsUseCase, getAllRetakesUseCase, deleteRetakeUseCase) }
     val teacherController: TeacherController by lazy { TeacherController(userRepository, studentRepository, getTeacherRetakesUseCase, getRetakeDetailsUseCase, gradeStudentUseCase) }
+    val guestController: GuestController by lazy { GuestController(getSubjectsUseCase) }
 }
 
 fun appModule() {

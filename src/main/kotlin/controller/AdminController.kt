@@ -1,9 +1,8 @@
 package controller
 
-import data.dto.*
+import data.dto.CreateRetakeRequest
 import domain.model.mappers.toCommentDto
 import domain.model.mappers.toRetakeDto
-import domain.model.mappers.toSubjectDto
 import domain.model.mappers.toTeacherDto
 import domain.usecases.*
 import helpers.longPathParam
@@ -14,7 +13,6 @@ import io.ktor.server.routing.*
 
 class AdminController(
     private val getTeachersByDisciplineUseCase: GetTeachersByDisciplineUseCase,
-    private val getSubjectsUseCase: GetSubjectsUseCase,
     private val createRetakeUseCase: CreateRetakeUseCase,
     private val redactRetakeUseCase: RedactRetakeUseCase,
     private val getAllCommentsUseCase: GetAllCommentsUseCase,
@@ -24,13 +22,9 @@ class AdminController(
     fun configure(route: Route) {
         route.get("/teachers") {
             val discipline = call.request.queryParameters["discipline"] ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Query parameter 'discipline' is required"))
-            println(discipline)
+            // println(discipline)
             val teachers = getTeachersByDisciplineUseCase(discipline)
             call.respond(teachers.map { it.toTeacherDto() })
-        }
-        route.get("/subjects") {
-            val subjects = getSubjectsUseCase()
-            call.respond(subjects.map { it.toSubjectDto() })
         }
         route.post("/create_retake") {
             val request = call.receive<CreateRetakeRequest>()
