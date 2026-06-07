@@ -7,12 +7,15 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object DatabaseFactory {
+    val DB_URL = System.getenv("DB_URL") ?: error("DB_URL не задан")
+    val DB_USER = System.getenv("DB_USER") ?: error("DB_USER не задан")
+    val DB_PASSWORD = System.getenv("DB_PASSWORD") ?: error("DB_PASSWORD не задан")
     fun init() {
         val config = HikariConfig().apply {
-            jdbcUrl = "jdbc:postgresql://ep-cold-wind-aqagg94b.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require"
+            jdbcUrl = DB_URL
             driverClassName = "org.postgresql.Driver"
-            username = "neondb_owner"
-            password = "npg_dbaT4c3mKvIV"
+            username = DB_USER
+            password = DB_PASSWORD
             maximumPoolSize = 10
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"

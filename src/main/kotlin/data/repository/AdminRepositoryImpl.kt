@@ -1,30 +1,17 @@
 package data.repository
 
-import data.databases.CommentsTable
-import data.databases.TeacherDisciplinesTable
-import data.databases.RetakeTeachersTable
-import data.databases.RetakesTable
-import data.databases.StudentsTable
-import data.databases.SubjectsTable
-import data.databases.UsersTable
+import data.databases.*
 import data.mappers.toComment
 import data.mappers.toRetake
-import data.mappers.toSubject
 import data.mappers.toTeacher
 import domain.model.Comment
 import domain.model.Retake
-import domain.model.Subject
 import domain.model.Teacher
 import domain.repository.AdminRepository
 import helpers.fetchTeacherIds
-import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import java.time.Instant
 
 class AdminRepositoryImpl : AdminRepository {
@@ -44,10 +31,6 @@ class AdminRepositoryImpl : AdminRepository {
         teacherRows.map { (teacherId, rows) ->
             rows.first().toTeacher(allDisciplines[teacherId] ?: emptyList())
         }
-    }
-
-    override suspend fun findAllSubjects(): List<Subject> = transaction {
-        SubjectsTable.selectAll().map { it.toSubject() }
     }
 
     override suspend fun createRetake(startAt: Instant, endAt: Instant, teacherIds: List<Long>, type: String, place: String, admission: String?, subjectId: Long): Retake = transaction {

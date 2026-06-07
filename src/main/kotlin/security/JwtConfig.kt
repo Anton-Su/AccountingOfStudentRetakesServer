@@ -6,10 +6,9 @@ import com.auth0.jwt.algorithms.Algorithm
 import java.util.Date
 
 object JwtConfig {
-    private const val SECRET = "a8fK2mP9xQ4vN7tY1wZ6rL3cHs8uJ5dE"
-    // представим, что это переменная окружения
-    private const val ISSUER = "ktor-app"
-    private const val AUDIENCE = "mobile-app"
+    val SECRET = System.getenv("JWT_SECRET") ?: error("JWT_SECRET не задан")
+    val ISSUER = System.getenv("JWT_ISSUER") ?: error("JWT_ISSUER не задан")
+    val AUDIENCE = System.getenv("JWT_AUDIENCE") ?: error("JWT_AUDIENCE не задан")
     private const val VALIDITY = 14L * 24 * 60 * 60 * 1000 // 14
 
     val verifier: JWTVerifier = JWT

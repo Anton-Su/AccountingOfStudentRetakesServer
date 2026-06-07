@@ -1,9 +1,9 @@
 package domain.usecases
 
 import domain.model.Subject
-import domain.repository.AdminRepository
+import domain.repository.GuestRepository
 
-class GetSubjectsUseCase(private val adminRepository: AdminRepository) {
-    suspend operator fun invoke(): List<Subject> = adminRepository.findAllSubjects()
+class GetSubjectsUseCase(private val guestRepository: GuestRepository) {
+    suspend operator fun invoke(): List<Subject> = guestRepository.findAllSubjects()
 }
 
